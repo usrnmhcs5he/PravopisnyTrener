@@ -10,6 +10,7 @@ Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závis
 
 | Verzia | Dátum | Zmeny |
 |--------|------------|-------|
+| v3.0 | 2026-07-18 | Nová obrazovka „📖 Vysvetlivky": slovník všetkých 245 položiek zoskupený podľa kategórií, vyhľadávanie bez ohľadu na diakritiku a veľkosť písmen, farebne zvýraznené i/y (tyrkysové mäkké, oranžové tvrdé) + pravidlo pri každej položke. |
 | v2.0 | 2026-07-18 | Tlačidlá odpovede výslovne ukazujú aj dlhé varianty: „i (í)" a „y (ý)" s popisom „mäkké/tvrdé — aj dlhé". Viditeľné označenie „verzia 2" na domovskej obrazovke. Verzia v exporte štatistík zvýšená na 2.0. Slovník bez zmeny. |
 | v1.0 | 2026-07-18 | Prvé vydanie: 3 režimy, 245 položiek, adaptívny výber, štatistiky, export/import, zvuky, konfety. |
 
@@ -37,6 +38,14 @@ Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závis
 | 🔍 **Nájdi chybu** | Vo vete je jedno i/y naschvál vymenené. Dieťa naň klepne. | 56 viet (vety s ≥ 2 výskytmi i/y) |
 
 Ovládanie klávesnicou: **i** / **y** = odpoveď, **Enter** = ďalej.
+
+### 📖 Vysvetlivky (od v3.0)
+
+Tlačidlo v hlavnom menu otvorí slovník všetkých položiek zoskupený podľa
+kategórií. Pri každom slove či vete je farebne zvýraznené písmeno
+(tyrkysové = mäkké i/í, oranžové = tvrdé y/ý) a pravidlo, prečo sa tam píše.
+Vyhľadávanie funguje bez ohľadu na diakritiku a veľkosť písmen („byk" nájde
+„býk").
 
 Tlačidlo **i (í)** platí pre krátke i aj dlhé í, tlačidlo **y (ý)** pre krátke
 y aj dlhé ý — správnu dĺžku doplní aplikácia sama. Slovník obsahuje všetky
@@ -141,4 +150,4 @@ Slovník a pravidlá boli pri tvorbe overené proti verejným školským zdrojom
 - Nevykonáva žiadne sieťové volania; všetko (zvuky, grafika, dáta) je vnorené.
 - Jediné zapisované dáta sú lokálne štatistiky hráča v prehliadači.
 
-<!-- v2.0 (2026-07-18) — koniec súboru -->
+<!-- v3.0 (2026-07-18) — koniec súboru -->
