@@ -5,6 +5,15 @@
   Interaktívna doplňovačka na precvičovanie slovenského pravopisu
 =====================================================================
   VERSION HISTORY
+  v3.0 (2026-07-18)
+    - Nova obrazovka „Vysvetlivky": slovnik vsetkych 245 poloziek
+      zoskupeny podla kategorii, s vyhladavanim (bez ohladu na
+      diakritiku) a farebne zvyraznenym pismenom i/y v slove
+      alebo vete + pravidlo pri kazdej polozke.
+    - Nove tlacidlo „📖 Vysvetlivky" v hlavnom menu.
+    - Oznacenie verzie na domovskej obrazovke: verzia 3;
+      verzia exportu statistik zvysena na 3.0.
+    - Slovnik a herne rezimy bez zmeny.
   v2.0 (2026-07-18)
     - Tlačidlá odpovede teraz výslovne ukazujú aj dlhé varianty:
       „i (í)" a „y (ý)" s popisom „mäkké/tvrdé — aj dlhé".
@@ -235,6 +244,21 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
 .io-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
 .io-row .chip-btn{flex:1;min-width:120px;text-align:center;font-size:15px;}
 
+/* ---------- slovník s vysvetlivkami ---------- */
+.dict-search{width:100%;box-sizing:border-box;border:none;border-radius:14px;
+  padding:12px 14px;font-size:17px;font-family:inherit;background:#FBF7EA;
+  box-shadow:inset 0 0 0 2px #E9E2CE;margin-bottom:6px;color:var(--ink);}
+.dict-search:focus{outline:none;box-shadow:inset 0 0 0 2px var(--soft);}
+.dict-cat{margin:18px 0 6px;font-size:14px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--soft-deep);}
+.dict-item{padding:9px 12px;background:#FBF7EA;border-radius:12px;margin:6px 0;}
+.dict-word{font-size:19px;font-weight:800;}
+.dict-sent{font-size:15px;margin-top:2px;line-height:1.45;}
+.dict-expl{font-size:14px;color:var(--ink-soft);margin-top:2px;line-height:1.35;}
+.hl-i{color:var(--soft);font-weight:800;}
+.hl-y{color:var(--hard-deep);font-weight:800;}
+.home-foot .chip-btn{font-size:15px;padding:10px 8px;}
+
 /* ---------- konfety ---------- */
 .cf{position:fixed;top:-14px;font-size:20px;pointer-events:none;z-index:99;
   animation:cfall linear forwards;}
@@ -304,9 +328,10 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
 
       <div class="home-foot">
         <button class="chip-btn" id="btnStats">📊 Štatistiky</button>
+        <button class="chip-btn" id="btnDict">📖 Vysvetlivky</button>
         <button class="chip-btn" id="btnSound">🔊 Zvuk</button>
       </div>
-      <div class="verline">verzia 2</div>
+      <div class="verline">verzia 3</div>
     </div>
   </section>
 
@@ -396,6 +421,19 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
         <button class="chip-btn" id="btnReset">🗑️ Vymazať</button>
       </div>
       <input type="file" id="impFile" accept="application/json" style="display:none">
+    </div>
+  </section>
+
+  <!-- ================= SLOVNÍK / VYSVETLIVKY ================= -->
+  <section id="scr-dict" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+    </div>
+    <div class="paper tight">
+      <h1 class="title" style="font-size:26px;">📖 Slovník s vysvetlivkami</h1>
+      <p class="subtitle" style="margin-bottom:12px;">Pri každom slove je pravidlo, prečo sa píše mäkké i alebo tvrdé y. Farebné písmeno ukazuje riešenie.</p>
+      <input class="dict-search" id="dictSearch" type="search" placeholder="🔎 Hľadaj slovo…" autocomplete="off">
+      <div id="dictBody"></div>
     </div>
   </section>
 
@@ -1173,7 +1211,7 @@ el("btnProblem").addEventListener("click", function(){
   startRound("quiz", items.slice(0, Math.max(10, Math.min(items.length, SET.count))));
 });
 el("btnExport").addEventListener("click", function(){
-  var data = { app: "pravopisny-trener", ver: "2.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
+  var data = { app: "pravopisny-trener", ver: "3.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
   var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1204,6 +1242,67 @@ el("btnReset").addEventListener("click", function(){
 });
 
 /* =============================================================
+   SLOVNÍK S VYSVETLIVKAMI
+   ============================================================= */
+function norm(t){
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+function hlFull(d){
+  var full = fullOf(d);
+  var pos = d.x.indexOf("_");
+  var cls = isSoft(d.a) ? "hl-i" : "hl-y";
+  return full.slice(0, pos) + "<span class=\"" + cls + "\">" + d.a + "</span>" + full.slice(pos + 1);
+}
+function renderDict(q){
+  var body = el("dictBody"); body.innerHTML = "";
+  var nq = q ? norm(q) : "";
+  var shown = 0;
+  CATS.forEach(function(c){
+    var items = DICT.filter(function(d){ return d.c === c[0]; });
+    if (nq){
+      items = items.filter(function(d){
+        return norm(fullOf(d)).indexOf(nq) >= 0 || (d.w && norm(d.w).indexOf(nq) >= 0);
+      });
+    }
+    if (!items.length) return;
+    var h = document.createElement("div");
+    h.className = "dict-cat";
+    h.textContent = c[1] + " (" + items.length + ")";
+    body.appendChild(h);
+    items.forEach(function(d){
+      var it = document.createElement("div"); it.className = "dict-item";
+      var title = document.createElement("div"); title.className = "dict-word";
+      if (d.t === "w"){
+        title.innerHTML = (d.m ? d.m + " " : "") + hlFull(d);
+      } else {
+        title.innerHTML = (d.m ? d.m + " " : "") + dispOf(d);
+      }
+      it.appendChild(title);
+      if (d.t === "s"){
+        var sn = document.createElement("div"); sn.className = "dict-sent";
+        sn.innerHTML = hlFull(d);
+        it.appendChild(sn);
+      }
+      var ex = document.createElement("div"); ex.className = "dict-expl";
+      ex.textContent = d.e;
+      it.appendChild(ex);
+      body.appendChild(it); shown++;
+    });
+  });
+  if (!shown){
+    var e0 = document.createElement("div"); e0.className = "mist";
+    e0.textContent = "Nič sa nenašlo. Skús to bez diakritiky alebo kratšie.";
+    body.appendChild(e0);
+  }
+}
+el("btnDict").addEventListener("click", function(){
+  el("dictSearch").value = "";
+  renderDict("");
+  show("scr-dict");
+});
+el("dictSearch").addEventListener("input", function(){ renderDict(this.value.trim()); });
+
+/* =============================================================
    KLÁVESNICA: i / y odpovedá, Enter = ďalej
    ============================================================= */
 document.addEventListener("keydown", function(ev){
@@ -1226,4 +1325,4 @@ refreshHome();
 </script>
 </body>
 </html>
-<!-- v2.0 (2026-07-18) — koniec súboru -->
+<!-- v3.0 (2026-07-18) — koniec súboru -->
