@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<!--
+=====================================================================
+  PRAVOPISNÝ TRÉNER — mäkké i / tvrdé y
+  Interaktívna doplňovačka na precvičovanie slovenského pravopisu
+=====================================================================
+  VERSION HISTORY
+  v2.0 (2026-07-18)
+    - Tlačidlá odpovede teraz výslovne ukazujú aj dlhé varianty:
+      „i (í)" a „y (ý)" s popisom „mäkké/tvrdé — aj dlhé".
+    - Viditeľné označenie „verzia 2" na domovskej obrazovke.
+    - Verzia v exporte štatistík zvýšená na 2.0.
+    - Slovník bez zmeny (245 položiek; krátke i, y aj dlhé í, ý
+      boli zastúpené už vo v1.0).
+  v1.0 (2026-07-18)
+    - Prvé vydanie.
+    - 3 herné režimy: Doplňovačka, Padajúce slová (arkáda),
+      Nájdi chybu.
+    - Slovník: 245 položiek v 14 kategóriách (vybrané slová po
+      B/M/P/R/S/V/Z, tvrdé a mäkké spoluhlásky, di-ti-ni-li,
+      mäkké i po obojakých, zradné dvojice, gramatické koncovky,
+      cudzie slová a výnimky).
+    - Adaptívny výber slov: váhový algoritmus, chybné slová sa
+      vracajú častejšie; perzistencia v localStorage
+      (s in-memory fallbackom).
+    - Štatistiky, problémové slová, export/import JSON.
+    - Zvuky cez Web Audio API (bez externých súborov),
+      konfety, animácie; beží offline, jediný súbor,
+      žiadne externé závislosti ani sieťové volania.
+=====================================================================
+-->
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pravopisný tréner — mäkké i / tvrdé y</title>
+<style>
+:root{
+  --paper:#FDFBF2;
+  --paper-deep:#F4EFDE;
+  --rule:#C4D9E9;
+  --margin:#E8756A;
+  --ink:#2E2E38;
+  --ink-soft:#6B6B78;
+  --soft:#1E88A8;   /* mäkké i */
+  --soft-deep:#136E89;
+  --hard:#E8842B;   /* tvrdé y */
+  --hard-deep:#C26615;
+  --ok:#2FA36B;
+  --err:#D9534F;
+  --card-r:20px;
+  --shadow:0 10px 30px rgba(46,46,56,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:ui-rounded,-apple-system,"SF Pro Rounded","Segoe UI",Roboto,system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, #FFE9C9 0%, transparent 60%),
+    radial-gradient(1000px 700px at -10% 110%, #D7ECF5 0%, transparent 55%),
+    var(--paper-deep);
+  color:var(--ink);
+  min-height:100vh;
+  padding:16px 12px 40px;
+}
+.wrap{max-width:760px;margin:0 auto;}
+.screen{display:none;}
+.screen.on{display:block;animation:pop .25s ease;}
+@keyframes pop{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* ---------- zošitový papier ---------- */
+.paper{
+  position:relative;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 35px, var(--rule) 35px 36px),
+    var(--paper);
+  border-radius:var(--card-r);
+  box-shadow:var(--shadow);
+  padding:26px 22px 26px 54px;
+  overflow:hidden;
+}
+.paper::before{
+  content:"";position:absolute;top:0;bottom:0;left:38px;width:2px;
+  background:var(--margin);opacity:.65;
+}
+.paper.tight{padding-left:22px;}
+.paper.tight::before{display:none;}
+
+/* ---------- hlavička ---------- */
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.topbar .spacer{flex:1;}
+.chip-btn{
+  border:none;background:var(--paper);box-shadow:var(--shadow);
+  border-radius:14px;padding:10px 14px;font-size:17px;font-weight:700;
+  color:var(--ink);cursor:pointer;font-family:inherit;
+}
+.chip-btn:active{transform:scale(.96);}
+.streak{font-weight:800;color:var(--hard-deep);font-size:18px;}
+
+h1.title{font-size:34px;margin:2px 0 4px;letter-spacing:-.5px;}
+.subtitle{color:var(--ink-soft);margin:0 0 18px;font-size:16px;}
+.owl{font-size:52px;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.15));}
+
+/* ---------- domovská obrazovka ---------- */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0 22px;}
+.mode-card{
+  border:none;text-align:left;cursor:pointer;font-family:inherit;
+  background:var(--paper);border-radius:var(--card-r);box-shadow:var(--shadow);
+  padding:16px;transition:transform .12s ease;
+}
+.mode-card:hover{transform:translateY(-3px);}
+.mode-card:active{transform:scale(.97);}
+.mode-card .ic{font-size:34px;}
+.mode-card h3{margin:8px 0 4px;font-size:19px;}
+.mode-card p{margin:0;color:var(--ink-soft);font-size:14px;line-height:1.35;}
+
+.set-block{margin:18px 0;}
+.set-block h4{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);}
+.count-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
+.count-val{font-size:26px;font-weight:800;min-width:64px;text-align:center;
+  background:var(--paper);border-radius:12px;padding:4px 8px;box-shadow:var(--shadow);}
+.quick{display:flex;gap:8px;}
+.quick button{border:none;background:#EDE6D2;border-radius:10px;padding:8px 12px;
+  font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;color:var(--ink);}
+.quick button:active{transform:scale(.95);}
+
+.cats{display:flex;flex-wrap:wrap;gap:8px;}
+.cat{
+  user-select:none;cursor:pointer;font-size:14px;font-weight:700;
+  padding:9px 13px;border-radius:999px;background:#EDE6D2;color:var(--ink-soft);
+  border:2px solid transparent;transition:all .12s ease;
+}
+.cat.onx{background:#DDF0F6;color:var(--soft-deep);border-color:var(--soft);}
+.cat input{display:none;}
+.pool-info{margin-top:10px;color:var(--ink-soft);font-size:14px;}
+
+.big-cta{margin-top:6px;width:100%;border:none;cursor:pointer;font-family:inherit;
+  background:linear-gradient(135deg,var(--soft),var(--soft-deep));color:#fff;
+  font-size:20px;font-weight:800;padding:16px;border-radius:16px;box-shadow:var(--shadow);}
+.big-cta:active{transform:scale(.98);}
+.home-foot{display:flex;gap:10px;margin-top:14px;}
+.home-foot .chip-btn{flex:1;}
+.verline{margin-top:14px;text-align:center;color:var(--ink-soft);font-size:13px;font-weight:700;letter-spacing:.04em;}
+
+/* ---------- kvíz ---------- */
+.progress{height:10px;background:#E9E2CE;border-radius:999px;overflow:hidden;margin-bottom:14px;}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--soft),var(--ok));
+  border-radius:999px;transition:width .3s ease;}
+.q-emoji{font-size:56px;text-align:center;line-height:1;margin:4px 0 2px;min-height:60px;}
+.q-word{
+  font-size:52px;font-weight:800;text-align:center;letter-spacing:.02em;
+  margin:6px 0 2px;line-height:1.25;word-wrap:break-word;
+}
+.q-word.sent{font-size:27px;font-weight:700;line-height:1.55;text-align:left;}
+.slot{
+  display:inline-block;min-width:.85em;border-bottom:4px dotted var(--hard);
+  color:transparent;transform:translateY(-2px);
+}
+.slot.filled{color:inherit;border-bottom-color:transparent;}
+.slot.good{color:var(--ok);animation:writein .35s ease;}
+.slot.bad{color:var(--err);}
+@keyframes writein{from{opacity:0;transform:translateY(-14px) scale(1.4);}to{opacity:1;transform:translateY(-2px);}}
+.squig{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='6'><path d='M0 4 Q3 0 6 4 T12 4' fill='none' stroke='%23D9534F' stroke-width='1.8'/></svg>");
+  background-repeat:repeat-x;background-position:0 100%;padding-bottom:5px;
+}
+.q-hint{min-height:54px;text-align:center;color:var(--ink-soft);font-size:16px;
+  margin:8px 0 4px;line-height:1.4;}
+.q-hint b{color:var(--ink);}
+.answers{display:flex;gap:14px;margin-top:10px;}
+.ans{
+  flex:1;border:none;cursor:pointer;font-family:inherit;color:#fff;
+  font-size:44px;font-weight:800;padding:18px 8px 22px;border-radius:18px;
+  box-shadow:var(--shadow);line-height:1;transition:transform .1s ease;
+}
+.ans small{display:block;font-size:14px;font-weight:700;opacity:.9;margin-top:6px;}
+.ans .alt{font-size:26px;font-weight:800;opacity:.9;}
+.ans.i{background:linear-gradient(135deg,#2BA3C6,var(--soft-deep));}
+.ans.y{background:linear-gradient(135deg,#F09A44,var(--hard-deep));}
+.ans:active{transform:scale(.95);}
+.ans[disabled]{opacity:.55;}
+.next-btn{display:none;margin:14px auto 0;border:none;cursor:pointer;font-family:inherit;
+  background:var(--ink);color:#fff;font-size:17px;font-weight:800;padding:12px 26px;border-radius:14px;}
+.card-shake{animation:shk .4s ease;}
+@keyframes shk{0%,100%{transform:none;}20%{transform:translateX(-9px);}40%{transform:translateX(8px);}
+  60%{transform:translateX(-6px);}80%{transform:translateX(4px);}}
+.fire{color:var(--err);font-size:15px;font-weight:800;}
+
+/* ---------- arkáda ---------- */
+.sky{
+  position:relative;height:46vh;min-height:280px;border-radius:var(--card-r);
+  background:linear-gradient(180deg,#CDEBF7 0%,#EAF6EC 78%,#BFE3A9 78%,#A9D68F 100%);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px;
+}
+.faller{
+  position:absolute;left:50%;transform:translateX(-50%);top:-70px;
+  background:var(--paper);border-radius:14px;box-shadow:var(--shadow);
+  padding:10px 18px;font-size:34px;font-weight:800;white-space:nowrap;
+}
+.hud{position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;
+  font-weight:800;font-size:18px;}
+.arc-fb{position:absolute;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;
+  background:rgba(253,251,242,.9);font-size:20px;font-weight:700;text-align:center;padding:20px;}
+.arc-fb.on{display:flex;}
+
+/* ---------- nájdi chybu ---------- */
+.find-sent{font-size:29px;font-weight:700;line-height:1.7;text-align:left;}
+.iy{
+  display:inline-block;min-width:.7em;text-align:center;cursor:pointer;border-radius:8px;
+  border-bottom:3px solid rgba(30,136,168,.35);margin:0 1px;transition:background .12s;
+}
+.iy:hover{background:#E4F2F7;}
+.iy.hit-good{background:#DDF3E7;color:var(--ok);border-bottom-color:var(--ok);}
+.iy.hit-bad{background:#FBE3E1;color:var(--err);border-bottom-color:var(--err);}
+.iy.reveal{color:var(--ok);border-bottom-color:var(--ok);}
+.iy.was-wrong{color:var(--err);text-decoration:line-through;}
+.find-note{text-align:center;color:var(--ink-soft);margin:2px 0 10px;font-size:15px;}
+
+/* ---------- výsledky ---------- */
+.stars{font-size:52px;text-align:center;letter-spacing:.1em;margin:4px 0;}
+.score-line{text-align:center;font-size:22px;font-weight:800;margin:0 0 14px;}
+.mist{margin:6px 0;padding:10px 12px;background:#FBF7EA;border-radius:12px;font-size:16px;line-height:1.45;}
+.mist b{color:var(--ok);}
+.res-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+.res-btns .chip-btn{flex:1;min-width:130px;text-align:center;}
+
+/* ---------- štatistiky ---------- */
+.stat-line{display:flex;justify-content:space-between;font-size:17px;margin:6px 0;}
+.bar{height:12px;background:#E9E2CE;border-radius:999px;overflow:hidden;margin:4px 0 12px;}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--soft),var(--ok));}
+.prob{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;
+  background:#FBF1EA;border-radius:12px;margin:6px 0;font-size:17px;font-weight:700;}
+.prob small{color:var(--ink-soft);font-weight:600;}
+.io-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.io-row .chip-btn{flex:1;min-width:120px;text-align:center;font-size:15px;}
+
+/* ---------- konfety ---------- */
+.cf{position:fixed;top:-14px;font-size:20px;pointer-events:none;z-index:99;
+  animation:cfall linear forwards;}
+@keyframes cfall{to{transform:translateY(110vh) rotate(540deg);opacity:.7;}}
+
+@media (max-width:520px){
+  .q-word{font-size:42px;}
+  .q-word.sent{font-size:22px;}
+  h1.title{font-size:27px;}
+  .paper{padding:22px 16px 22px 46px;}
+  .paper::before{left:32px;}
+  .ans{font-size:38px;}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= DOMOV ================= -->
+  <section id="scr-home" class="screen on">
+    <div class="paper tight">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="owl">🦉</div>
+        <div>
+          <h1 class="title">Mäkké i či tvrdé y?</h1>
+          <p class="subtitle">Pravopisný tréner — vyber si režim a poď na to!</p>
+        </div>
+      </div>
+
+      <div class="modes">
+        <button class="mode-card" data-mode="quiz">
+          <div class="ic">📝</div><h3>Doplňovačka</h3>
+          <p>Doplň i alebo y do slova či vety. Dĺžeň doplníme za teba.</p>
+        </button>
+        <button class="mode-card" data-mode="arcade">
+          <div class="ic">🚀</div><h3>Padajúce slová</h3>
+          <p>Stihni odpovedať, kým slovo dopadne. Máš 3 životy!</p>
+        </button>
+        <button class="mode-card" data-mode="find">
+          <div class="ic">🔍</div><h3>Nájdi chybu</h3>
+          <p>Vo vete sa skrýva jedno nesprávne i/y. Klepni naň!</p>
+        </button>
+      </div>
+
+      <div class="set-block">
+        <h4>Koľko slov v kole?</h4>
+        <div class="count-row">
+          <input type="range" id="countRange" min="10" max="245" step="1" value="15">
+          <div class="count-val" id="countVal">15</div>
+          <div class="quick">
+            <button data-q="10">10</button>
+            <button data-q="20">20</button>
+            <button data-q="40">40</button>
+            <button data-q="max">Max</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="set-block">
+        <h4>Čo chceš precvičovať?</h4>
+        <div class="cats" id="catBox"></div>
+        <div class="pool-info" id="poolInfo"></div>
+      </div>
+
+      <div class="home-foot">
+        <button class="chip-btn" id="btnStats">📊 Štatistiky</button>
+        <button class="chip-btn" id="btnSound">🔊 Zvuk</button>
+      </div>
+      <div class="verline">verzia 2</div>
+    </div>
+  </section>
+
+  <!-- ================= DOPLŇOVAČKA ================= -->
+  <section id="scr-quiz" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+      <div class="spacer"></div>
+      <div class="streak" id="qStreak"></div>
+    </div>
+    <div class="progress"><i id="qProg"></i></div>
+    <div class="paper" id="qCard">
+      <div class="q-emoji" id="qEmoji"></div>
+      <div class="q-word" id="qWord"></div>
+      <div class="q-hint" id="qHint"></div>
+      <div class="answers">
+        <button class="ans i" id="btnI">i <span class="alt">(í)</span><small>mäkké — aj dlhé</small></button>
+        <button class="ans y" id="btnY">y <span class="alt">(ý)</span><small>tvrdé — aj dlhé</small></button>
+      </div>
+      <button class="next-btn" id="qNext">Ďalej ⏎</button>
+    </div>
+  </section>
+
+  <!-- ================= ARKÁDA ================= -->
+  <section id="scr-arcade" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+      <div class="spacer"></div>
+      <div class="streak" id="aStreak"></div>
+    </div>
+    <div class="sky" id="sky">
+      <div class="hud"><span id="aLives">❤️❤️❤️</span><span id="aScore">0</span></div>
+      <div class="faller" id="faller"></div>
+      <div class="arc-fb" id="arcFb"></div>
+    </div>
+    <div class="answers">
+      <button class="ans i" id="aBtnI">i <span class="alt">(í)</span><small>mäkké — aj dlhé</small></button>
+      <button class="ans y" id="aBtnY">y <span class="alt">(ý)</span><small>tvrdé — aj dlhé</small></button>
+    </div>
+  </section>
+
+  <!-- ================= NÁJDI CHYBU ================= -->
+  <section id="scr-find" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+      <div class="spacer"></div>
+      <div class="streak" id="fStreak"></div>
+    </div>
+    <div class="progress"><i id="fProg"></i></div>
+    <p class="find-note">Jedno i/y je v tejto vete nesprávne. Klepni naň!</p>
+    <div class="paper" id="fCard">
+      <div class="find-sent" id="fSent"></div>
+      <div class="q-hint" id="fHint"></div>
+      <button class="next-btn" id="fNext">Ďalej ⏎</button>
+    </div>
+  </section>
+
+  <!-- ================= VÝSLEDKY ================= -->
+  <section id="scr-results" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+    </div>
+    <div class="paper tight">
+      <div class="stars" id="rStars"></div>
+      <div class="score-line" id="rScore"></div>
+      <div id="rMist"></div>
+      <div class="res-btns">
+        <button class="chip-btn" id="rAgain">🔁 Ešte raz</button>
+        <button class="chip-btn" id="rOnlyBad">🔥 Len chybné</button>
+        <button class="chip-btn" data-home>🏠 Domov</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ŠTATISTIKY ================= -->
+  <section id="scr-stats" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+    </div>
+    <div class="paper tight">
+      <h1 class="title" style="font-size:26px;">📊 Štatistiky</h1>
+      <div id="statBody"></div>
+      <div class="io-row">
+        <button class="chip-btn" id="btnProblem">🔥 Precvičiť problémové</button>
+        <button class="chip-btn" id="btnExport">⬇️ Export</button>
+        <button class="chip-btn" id="btnImport">⬆️ Import</button>
+        <button class="chip-btn" id="btnReset">🗑️ Vymazať</button>
+      </div>
+      <input type="file" id="impFile" accept="application/json" style="display:none">
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+/* =============================================================
+   POMOCNÍCI: úložisko (localStorage + in-memory fallback)
+   ============================================================= */
+var MEM = {};
+var store = {
+  get: function(k){
+    try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }
+    catch(e){ return MEM[k] || null; }
+  },
+  set: function(k, v){
+    try { localStorage.setItem(k, JSON.stringify(v)); }
+    catch(e){ MEM[k] = v; }
+  }
+};
+var K_STATS = "pt_stats_v1";
+var K_SET   = "pt_settings_v1";
+
+/* =============================================================
+   ZVUKY — Web Audio API, žiadne externé súbory
+   ============================================================= */
+var AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq, dur, type, when, gain){
+  var c = ac(); if(!c || !SET.sound) return;
+  var o = c.createOscillator(), g = c.createGain();
+  o.type = type || "sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, c.currentTime + when);
+  g.gain.exponentialRampToValueAtTime(gain || 0.18, c.currentTime + when + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + when + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime + when); o.stop(c.currentTime + when + dur + 0.05);
+}
+function sndGood(){ tone(523.25,.11,"sine",0); tone(659.25,.11,"sine",.09); tone(783.99,.16,"sine",.18); }
+function sndBad(){ tone(160,.22,"sawtooth",0,.12); tone(110,.25,"sawtooth",.08,.12); }
+function sndFanfare(){ tone(523.25,.12,"triangle",0); tone(659.25,.12,"triangle",.1); tone(783.99,.12,"triangle",.2); tone(1046.5,.3,"triangle",.3,.22); }
+
+/* konfety */
+var CF_EMO = ["🎉","⭐","✨","🟠","🔵","💛","🟢"];
+function confetti(n){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (var i=0;i<n;i++){
+    var s = document.createElement("span");
+    s.className = "cf";
+    s.textContent = CF_EMO[Math.floor(Math.random()*CF_EMO.length)];
+    s.style.left = (5+Math.random()*90) + "vw";
+    s.style.animationDuration = (1.3+Math.random()*1.4) + "s";
+    s.style.fontSize = (14+Math.random()*16) + "px";
+    document.body.appendChild(s);
+    setTimeout(function(el){ return function(){ el.remove(); }; }(s), 3000);
+  }
+}
+
+/* =============================================================
+   SLOVNÍK
+   Formát položky:
+   { id, t:'w'|'s'  (slovo | veta),
+     x:  text s presne jednou medzerou "_",
+     a:  správne písmeno: i / í / y / ý,
+     c:  kód kategórie,
+     e:  vysvetlenie (zobrazí sa pri chybe aj pri správnej odpovedi),
+     m:  voliteľné emoji,
+     w:  voliteľné — cieľové slovo pri vetách (pre zoznamy) }
+   ============================================================= */
+var CATS = [
+  ["vb","Vybrané po B"],["vm","Vybrané po M"],["vp","Vybrané po P"],
+  ["vr","Vybrané po R"],["vs","Vybrané po S"],["vv","Vybrané po V"],
+  ["vz","Vybrané po Z"],
+  ["tv","Tvrdé spoluhlásky → y"],["mk","Mäkké spoluhlásky → i"],
+  ["dl","Mäkké di, ti, ni, li"],["ob","Mäkké i po obojakých"],
+  ["pr","Zradné dvojice"],["gr","Gramatické koncovky"],
+  ["cu","Cudzie slová a výnimky"]
+];
+/*DICT-START*/
+var DICT = [
+/* ---- Vybrané slová po B (16) ---- */
+{id:'vb01',t:'w',x:'b_k',a:'ý',c:'vb',e:'vybrané slovo po B',m:'🐂'},
+{id:'vb02',t:'w',x:'dob_tok',a:'y',c:'vb',e:'vybrané slovo po B',m:'🐄'},
+{id:'vb03',t:'w',x:'kob_la',a:'y',c:'vb',e:'vybrané slovo po B',m:'🐴'},
+{id:'vb04',t:'w',x:'b_vol',a:'y',c:'vb',e:'vybrané slovo po B',m:'🐃'},
+{id:'vb05',t:'w',x:'náb_tok',a:'y',c:'vb',e:'vybrané slovo po B',m:'🛋️'},
+{id:'vb06',t:'w',x:'ob_vateľ',a:'y',c:'vb',e:'vybrané slovo po B (od slova bývať)',m:'🏠'},
+{id:'vb07',t:'w',x:'b_t',a:'y',c:'vb',e:'vybrané slovo po B',m:'🏢'},
+{id:'vb08',t:'w',x:'b_strý',a:'y',c:'vb',e:'vybrané slovo po B',m:'💡'},
+{id:'vb09',t:'w',x:'B_strica',a:'y',c:'vb',e:'vybrané slovo po B (Banská Bystrica)'},
+{id:'vb10',t:'w',x:'b_lina',a:'y',c:'vb',e:'vybrané slovo po B',m:'🌿'},
+{id:'vb11',t:'w',x:'ob_čaj',a:'y',c:'vb',e:'vybrané slovo po B'},
+{id:'vb12',t:'w',x:'zb_točný',a:'y',c:'vb',e:'vybrané slovo po B'},
+{id:'vb13',t:'w',x:'príb_tok',a:'y',c:'vb',e:'vybrané slovo po B (od slova bývať)'},
+{id:'vb14',t:'w',x:'b_dlisko',a:'y',c:'vb',e:'vybrané slovo po B'},
+{id:'vb15',t:'w',x:'b_vať',a:'ý',c:'vb',e:'vybrané slovo po B'},
+{id:'vb16',t:'w',x:'B_tča',a:'y',c:'vb',e:'vybrané slovo po B (mesto)'},
+/* ---- Vybrané slová po M (16) ---- */
+{id:'vm01',t:'w',x:'m_dlo',a:'y',c:'vm',e:'vybrané slovo po M (od slova umyť)',m:'🧼'},
+{id:'vm02',t:'w',x:'m_š',a:'y',c:'vm',e:'vybrané slovo po M',m:'🐭'},
+{id:'vm03',t:'w',x:'um_vať',a:'ý',c:'vm',e:'vybrané slovo po M',m:'🧽'},
+{id:'vm04',t:'w',x:'m_liť sa',a:'ý',c:'vm',e:'vybrané slovo po M'},
+{id:'vm05',t:'w',x:'om_l',a:'y',c:'vm',e:'vybrané slovo po M (od mýliť sa)'},
+{id:'vm06',t:'w',x:'m_slieť',a:'y',c:'vm',e:'vybrané slovo po M',m:'🤔'},
+{id:'vm07',t:'w',x:'m_šlienka',a:'y',c:'vm',e:'vybrané slovo po M (od myslieť)',m:'💭'},
+{id:'vm08',t:'w',x:'zm_sel',a:'y',c:'vm',e:'vybrané slovo po M (od myslieť)'},
+{id:'vm09',t:'w',x:'priem_sel',a:'y',c:'vm',e:'vybrané slovo po M (od myslieť)',m:'🏭'},
+{id:'vm10',t:'w',x:'hm_z',a:'y',c:'vm',e:'vybrané slovo po M',m:'🐜'},
+{id:'vm11',t:'w',x:'žm_kať',a:'ý',c:'vm',e:'vybrané slovo po M'},
+{id:'vm12',t:'w',x:'šm_kľavka',a:'y',c:'vm',e:'vybrané slovo po M (od šmýkať sa)',m:'🛝'},
+{id:'vm13',t:'w',x:'šm_k',a:'y',c:'vm',e:'vybrané slovo po M'},
+{id:'vm14',t:'w',x:'zam_kať',a:'y',c:'vm',e:'vybrané slovo po M (od mykať)',m:'🔑'},
+{id:'vm15',t:'w',x:'M_java',a:'y',c:'vm',e:'vybrané slovo po M (mesto)'},
+{id:'vm16',t:'w',x:'m_to',a:'ý',c:'vm',e:'vybrané slovo po M (poplatok za cestu)',m:'🛣️'},
+/* ---- Vybrané slová po P (12) ---- */
+{id:'vp01',t:'w',x:'p_cha',a:'ý',c:'vp',e:'vybrané slovo po P'},
+{id:'vp02',t:'w',x:'p_šný',a:'y',c:'vp',e:'vybrané slovo po P (od pýcha)',m:'🦚'},
+{id:'vp03',t:'w',x:'p_tať sa',a:'ý',c:'vp',e:'vybrané slovo po P',m:'❓'},
+{id:'vp04',t:'w',x:'p_tliak',a:'y',c:'vp',e:'vybrané slovo po P'},
+{id:'vp05',t:'w',x:'kop_to',a:'y',c:'vp',e:'vybrané slovo po P',m:'🐎'},
+{id:'vp06',t:'w',x:'p_kať',a:'y',c:'vp',e:'vybrané slovo po P (pykať za niečo)'},
+{id:'vp07',t:'w',x:'prep_ch',a:'y',c:'vp',e:'vybrané slovo po P (od pýcha)',m:'💎'},
+{id:'vp08',t:'w',x:'p_sk',a:'y',c:'vp',e:'vybrané slovo po P (papuľa)'},
+{id:'vp09',t:'w',x:'zap_riť sa',a:'ý',c:'vp',e:'vybrané slovo po P (očervenieť)',m:'😊'},
+{id:'vp10',t:'w',x:'dop_t',a:'y',c:'vp',e:'vybrané slovo po P (od pýtať sa)',m:'📈'},
+{id:'vp11',t:'w',x:'p_r',a:'ý',c:'vp',e:'vybrané slovo po P (burina)',m:'🌱'},
+{id:'vp12',t:'w',x:'p_žamo',a:'y',c:'vp',e:'vybrané slovo po P'},
+/* ---- Vybrané slová po R (20) ---- */
+{id:'vr01',t:'w',x:'r_ba',a:'y',c:'vr',e:'vybrané slovo po R',m:'🐟'},
+{id:'vr02',t:'w',x:'r_bník',a:'y',c:'vr',e:'vybrané slovo po R (od ryba)'},
+{id:'vr03',t:'w',x:'r_chly',a:'ý',c:'vr',e:'vybrané slovo po R',m:'🏃'},
+{id:'vr04',t:'w',x:'r_ža',a:'y',c:'vr',e:'vybrané slovo po R',m:'🍚'},
+{id:'vr05',t:'w',x:'br_ndza',a:'y',c:'vr',e:'vybrané slovo po R',m:'🧀'},
+{id:'vr06',t:'w',x:'kor_tnačka',a:'y',c:'vr',e:'vybrané slovo po R (od koryto)',m:'🐢'},
+{id:'vr07',t:'w',x:'kor_to',a:'y',c:'vr',e:'vybrané slovo po R'},
+{id:'vr08',t:'w',x:'r_ť',a:'y',c:'vr',e:'vybrané slovo po R (rozrušovať pôdu)'},
+{id:'vr09',t:'w',x:'r_ľ',a:'ý',c:'vr',e:'vybrané slovo po R (od ryť)'},
+{id:'vr10',t:'w',x:'ukr_ť',a:'y',c:'vr',e:'vybrané slovo po R (od kryť)',m:'🙈'},
+{id:'vr11',t:'w',x:'prikr_vka',a:'ý',c:'vr',e:'vybrané slovo po R (od kryť)',m:'🛏️'},
+{id:'vr12',t:'w',x:'skr_ša',a:'ý',c:'vr',e:'vybrané slovo po R (od kryť)'},
+{id:'vr13',t:'w',x:'str_ko',a:'ý',c:'vr',e:'vybrané slovo po R'},
+{id:'vr14',t:'w',x:'r_tier',a:'y',c:'vr',e:'vybrané slovo po R',m:'⚔️'},
+{id:'vr15',t:'w',x:'kr_ha',a:'y',c:'vr',e:'vybrané slovo po R',m:'🧊'},
+{id:'vr16',t:'w',x:'r_šavý',a:'y',c:'vr',e:'vybrané slovo po R (ryšavé vlasy)',m:'🦊'},
+{id:'vr17',t:'w',x:'hr_zť',a:'ý',c:'vr',e:'vybrané slovo po R',m:'🦷'},
+{id:'vr18',t:'w',x:'úr_vok',a:'y',c:'vr',e:'vybrané slovo po R (časť textu)',m:'📖'},
+{id:'vr19',t:'w',x:'r_dzik',a:'ý',c:'vr',e:'vybrané slovo po R (hríb)',m:'🍄'},
+{id:'vr20',t:'w',x:'r_čať',a:'y',c:'vr',e:'vybrané slovo po R (rev zvierat)',m:'🦁'},
+/* ---- Vybrané slová po S (12) ---- */
+{id:'vs01',t:'w',x:'s_n',a:'y',c:'vs',e:'vybrané slovo po S',m:'👦'},
+{id:'vs02',t:'w',x:'s_r',a:'y',c:'vs',e:'vybrané slovo po S',m:'🧀'},
+{id:'vs03',t:'w',x:'s_ty',a:'ý',c:'vs',e:'vybrané slovo po S (najedený)'},
+{id:'vs04',t:'w',x:'s_pať',a:'y',c:'vs',e:'vybrané slovo po S'},
+{id:'vs05',t:'w',x:'os_pky',a:'ý',c:'vs',e:'vybrané slovo po S (choroba)',m:'🤒'},
+{id:'vs06',t:'w',x:'s_korka',a:'ý',c:'vs',e:'vybrané slovo po S (vtáčik)',m:'🐦'},
+{id:'vs07',t:'w',x:'s_čať',a:'y',c:'vs',e:'vybrané slovo po S',m:'🐍'},
+{id:'vs08',t:'w',x:'s_seľ',a:'y',c:'vs',e:'vybrané slovo po S (hlodavec)',m:'🐿️'},
+{id:'vs09',t:'w',x:'s_chravý',a:'y',c:'vs',e:'vybrané slovo po S (sychravé počasie)',m:'🌧️'},
+{id:'vs10',t:'w',x:'vys_chať',a:'y',c:'vs',e:'vybrané slovo po S'},
+{id:'vs11',t:'w',x:'s_pký',a:'y',c:'vs',e:'vybrané slovo po S (od sypať)'},
+{id:'vs12',t:'w',x:'nenás_tný',a:'y',c:'vs',e:'vybrané slovo po S (od sýty)'},
+/* ---- Vybrané slová po V (16) ---- */
+{id:'vv01',t:'w',x:'v_kať',a:'y',c:'vv',e:'vybrané slovo po V (oslovovať „vy“)'},
+{id:'vv02',t:'w',x:'v_soký',a:'y',c:'vv',e:'vybrané slovo po V',m:'📏'},
+{id:'vv03',t:'w',x:'v_ška',a:'ý',c:'vv',e:'vybrané slovo po V (od vysoký)'},
+{id:'vv04',t:'w',x:'zv_k',a:'y',c:'vv',e:'vybrané slovo po V'},
+{id:'vv05',t:'w',x:'náv_k',a:'y',c:'vv',e:'vybrané slovo po V (od zvyk)'},
+{id:'vv06',t:'w',x:'v_dra',a:'y',c:'vv',e:'vybrané slovo po V',m:'🦦'},
+{id:'vv07',t:'w',x:'v_r',a:'ý',c:'vv',e:'vybrané slovo po V (výr = druh sovy)',m:'🦉'},
+{id:'vv08',t:'w',x:'v_žla',a:'y',c:'vv',e:'vybrané slovo po V (poľovný pes)',m:'🐕'},
+{id:'vv09',t:'w',x:'v_skať',a:'ý',c:'vv',e:'vybrané slovo po V (od radosti)',m:'🎉'},
+{id:'vv10',t:'w',x:'zav_jať',a:'ý',c:'vv',e:'vybrané slovo po V (od vyť)',m:'🐺'},
+{id:'vv11',t:'w',x:'zv_šok',a:'y',c:'vv',e:'vybrané slovo po V'},
+{id:'vv12',t:'w',x:'v_hňa',a:'y',c:'vv',e:'vybrané slovo po V (kováčska dielňa)',m:'🔥'},
+{id:'vv13',t:'w',x:'v_let',a:'ý',c:'vv',e:'predpona vý- sa vždy píše s y',m:'🎒'},
+{id:'vv14',t:'w',x:'v_hra',a:'ý',c:'vv',e:'predpona vý- sa vždy píše s y',m:'🏆'},
+{id:'vv15',t:'w',x:'v_myslieť',a:'y',c:'vv',e:'predpona vy- sa vždy píše s y'},
+{id:'vv16',t:'w',x:'v_robiť',a:'y',c:'vv',e:'predpona vy- sa vždy píše s y'},
+/* ---- Vybrané slová po Z (8) ---- */
+{id:'vz01',t:'w',x:'jaz_k',a:'y',c:'vz',e:'vybrané slovo po Z',m:'👅'},
+{id:'vz02',t:'w',x:'jaz_ček',a:'ý',c:'vz',e:'vybrané slovo po Z (od jazyk)'},
+{id:'vz03',t:'w',x:'naz_vať sa',a:'ý',c:'vz',e:'vybrané slovo po Z'},
+{id:'vz04',t:'w',x:'poz_vať',a:'ý',c:'vz',e:'vybrané slovo po Z',m:'💌'},
+{id:'vz05',t:'w',x:'oz_vať sa',a:'ý',c:'vz',e:'vybrané slovo po Z',m:'📢'},
+{id:'vz06',t:'w',x:'vyz_vať',a:'ý',c:'vz',e:'vybrané slovo po Z'},
+{id:'vz07',t:'w',x:'prez_vka',a:'ý',c:'vz',e:'vybrané slovo po Z'},
+{id:'vz08',t:'w',x:'vz_vať',a:'ý',c:'vz',e:'vybrané slovo po Z'},
+/* ---- Tvrdé spoluhlásky → y (24) ---- */
+{id:'tv01',t:'w',x:'ch_ba',a:'y',c:'tv',e:'po tvrdej spoluhláske CH píšeme y'},
+{id:'tv02',t:'w',x:'ch_tať',a:'y',c:'tv',e:'po tvrdej spoluhláske CH píšeme y',m:'🥎'},
+{id:'tv03',t:'w',x:'ch_bať',a:'ý',c:'tv',e:'po tvrdej spoluhláske CH píšeme y'},
+{id:'tv04',t:'w',x:'k_slý',a:'y',c:'tv',e:'po tvrdej spoluhláske K píšeme y',m:'🍋'},
+{id:'tv05',t:'w',x:'k_tica',a:'y',c:'tv',e:'po tvrdej spoluhláske K píšeme y',m:'💐'},
+{id:'tv06',t:'w',x:'k_chať',a:'ý',c:'tv',e:'po tvrdej spoluhláske K píšeme y',m:'🤧'},
+{id:'tv07',t:'w',x:'h_bať sa',a:'ý',c:'tv',e:'po tvrdej spoluhláske H píšeme y',m:'🕺'},
+{id:'tv08',t:'w',x:'h_dina',a:'y',c:'tv',e:'po tvrdej spoluhláske H píšeme y',m:'🐔'},
+{id:'tv09',t:'w',x:'g_č',a:'ý',c:'tv',e:'po tvrdej spoluhláske G píšeme y'},
+{id:'tv10',t:'w',x:'d_m',a:'y',c:'tv',e:'D tu znie tvrdo, preto píšeme y',m:'💨'},
+{id:'tv11',t:'w',x:'d_chať',a:'ý',c:'tv',e:'D tu znie tvrdo, preto píšeme y'},
+{id:'tv12',t:'w',x:'d_ka',a:'ý',c:'tv',e:'D tu znie tvrdo, preto píšeme y',m:'🗡️'},
+{id:'tv13',t:'w',x:'mot_ka',a:'y',c:'tv',e:'T tu znie tvrdo, preto píšeme y'},
+{id:'tv14',t:'w',x:'mot_ľ',a:'ý',c:'tv',e:'T tu znie tvrdo, preto píšeme y',m:'🦋'},
+{id:'tv15',t:'w',x:'t_ždeň',a:'ý',c:'tv',e:'T tu znie tvrdo, preto píšeme y',m:'📅'},
+{id:'tv16',t:'w',x:'t_kadlo',a:'y',c:'tv',e:'T tu znie tvrdo, preto píšeme y',m:'🐌'},
+{id:'tv17',t:'w',x:'l_že',a:'y',c:'tv',e:'L tu znie tvrdo, preto píšeme y',m:'🎿'},
+{id:'tv18',t:'w',x:'l_žica',a:'y',c:'tv',e:'L tu znie tvrdo, preto píšeme y',m:'🥄'},
+{id:'tv19',t:'w',x:'ml_n',a:'y',c:'tv',e:'L tu znie tvrdo, preto píšeme y'},
+{id:'tv20',t:'w',x:'pl_n',a:'y',c:'tv',e:'L tu znie tvrdo, preto píšeme y'},
+{id:'tv21',t:'w',x:'pl_tký',a:'y',c:'tv',e:'L tu znie tvrdo, preto píšeme y'},
+{id:'tv22',t:'w',x:'l_tko',a:'ý',c:'tv',e:'L tu znie tvrdo, preto píšeme y',m:'🦵'},
+{id:'tv23',t:'w',x:'vzl_kať',a:'y',c:'tv',e:'L tu znie tvrdo, preto píšeme y',m:'😢'},
+{id:'tv24',t:'w',x:'bl_skať sa',a:'ý',c:'tv',e:'L tu znie tvrdo, preto píšeme y',m:'⚡'},
+/* ---- Mäkké spoluhlásky → i (15) ---- */
+{id:'mk01',t:'w',x:'c_buľa',a:'i',c:'mk',e:'po mäkkej spoluhláske C píšeme i',m:'🧅'},
+{id:'mk02',t:'w',x:'c_trón',a:'i',c:'mk',e:'po mäkkej spoluhláske C píšeme i',m:'🍋'},
+{id:'mk03',t:'w',x:'č_slo',a:'í',c:'mk',e:'po mäkkej spoluhláske Č píšeme i',m:'🔢'},
+{id:'mk04',t:'w',x:'č_stý',a:'i',c:'mk',e:'po mäkkej spoluhláske Č píšeme i',m:'✨'},
+{id:'mk05',t:'w',x:'č_žmy',a:'i',c:'mk',e:'po mäkkej spoluhláske Č píšeme i',m:'👢'},
+{id:'mk06',t:'w',x:'ž_vot',a:'i',c:'mk',e:'po mäkkej spoluhláske Ž píšeme i'},
+{id:'mk07',t:'w',x:'ž_rafa',a:'i',c:'mk',e:'po mäkkej spoluhláske Ž píšeme i',m:'🦒'},
+{id:'mk08',t:'w',x:'ž_la',a:'i',c:'mk',e:'po mäkkej spoluhláske Ž píšeme i'},
+{id:'mk09',t:'w',x:'š_ška',a:'i',c:'mk',e:'po mäkkej spoluhláske Š píšeme i',m:'🍩'},
+{id:'mk10',t:'w',x:'š_p',a:'í',c:'mk',e:'po mäkkej spoluhláske Š píšeme i',m:'🏹'},
+{id:'mk11',t:'w',x:'š_kovný',a:'i',c:'mk',e:'po mäkkej spoluhláske Š píšeme i'},
+{id:'mk12',t:'w',x:'prij_mať',a:'í',c:'mk',e:'po mäkkej spoluhláske J píšeme i'},
+{id:'mk13',t:'w',x:'cudz_',a:'í',c:'mk',e:'po mäkkej spoluhláske DZ píšeme i'},
+{id:'mk14',t:'w',x:'medz_tým',a:'i',c:'mk',e:'po mäkkej spoluhláske DZ píšeme i'},
+{id:'mk15',t:'w',x:'dž_nsy',a:'í',c:'mk',e:'po mäkkej spoluhláske DŽ píšeme i',m:'👖'},
+/* ---- Mäkké di, ti, ni, li (15) ---- */
+{id:'dl01',t:'w',x:'d_vadlo',a:'i',c:'dl',e:'D tu znie mäkko [ďi], preto píšeme i',m:'🎭'},
+{id:'dl02',t:'w',x:'hod_na',a:'i',c:'dl',e:'D tu znie mäkko [ďi], preto píšeme i',m:'⏰'},
+{id:'dl03',t:'w',x:'rod_na',a:'i',c:'dl',e:'D tu znie mäkko [ďi], preto píšeme i',m:'🏡'},
+{id:'dl04',t:'w',x:'t_cho',a:'i',c:'dl',e:'T tu znie mäkko [ťi], preto píšeme i',m:'🤫'},
+{id:'dl05',t:'w',x:'cest_čka',a:'i',c:'dl',e:'T tu znie mäkko [ťi], preto píšeme i'},
+{id:'dl06',t:'w',x:'n_č',a:'i',c:'dl',e:'N tu znie mäkko [ňi], preto píšeme i'},
+{id:'dl07',t:'w',x:'n_kto',a:'i',c:'dl',e:'N tu znie mäkko [ňi], preto píšeme i'},
+{id:'dl08',t:'w',x:'n_zky',a:'í',c:'dl',e:'N tu znie mäkko [ňí], preto píšeme i'},
+{id:'dl09',t:'w',x:'l_st',a:'i',c:'dl',e:'L tu znie mäkko [ľi], preto píšeme i',m:'🍃'},
+{id:'dl10',t:'w',x:'l_pa',a:'i',c:'dl',e:'L tu znie mäkko [ľi], preto píšeme i',m:'🌳'},
+{id:'dl11',t:'w',x:'l_stok',a:'í',c:'dl',e:'L tu znie mäkko [ľí], preto píšeme i',m:'🎫'},
+{id:'dl12',t:'w',x:'mal_na',a:'i',c:'dl',e:'L tu znie mäkko [ľi], preto píšeme i',m:'🍓'},
+{id:'dl13',t:'w',x:'pol_ca',a:'i',c:'dl',e:'L tu znie mäkko [ľi], preto píšeme i'},
+{id:'dl14',t:'w',x:'kl_nec',a:'i',c:'dl',e:'L tu znie mäkko [ľi], preto píšeme i',m:'🔨'},
+{id:'dl15',t:'w',x:'pivn_ca',a:'i',c:'dl',e:'N tu znie mäkko [ňi], preto píšeme i'},
+/* ---- Mäkké i po obojakých (15) ---- */
+{id:'ob01',t:'w',x:'ob_lie',a:'i',c:'ob',e:'nie je to vybrané slovo — po B píšeme mäkké i',m:'🌾'},
+{id:'ob02',t:'w',x:'b_cykel',a:'i',c:'ob',e:'cudzie slovo — po B píšeme mäkké i',m:'🚲'},
+{id:'ob03',t:'w',x:'m_sa',a:'i',c:'ob',e:'nie je to vybrané slovo — po M píšeme mäkké i',m:'🍲'},
+{id:'ob04',t:'w',x:'m_nca',a:'i',c:'ob',e:'nie je to vybrané slovo — po M píšeme mäkké i',m:'🪙'},
+{id:'ob05',t:'w',x:'m_lý',a:'i',c:'ob',e:'nie je to vybrané slovo — po M píšeme mäkké i'},
+{id:'ob06',t:'w',x:'p_sať',a:'í',c:'ob',e:'nie je to vybrané slovo — po P píšeme mäkké i',m:'✍️'},
+{id:'ob07',t:'w',x:'p_šťalka',a:'í',c:'ob',e:'nie je to vybrané slovo — po P píšeme mäkké i'},
+{id:'ob08',t:'w',x:'r_ziko',a:'i',c:'ob',e:'nie je to vybrané slovo — po R píšeme mäkké i'},
+{id:'ob09',t:'w',x:'s_la',a:'i',c:'ob',e:'nie je to vybrané slovo — po S píšeme mäkké i',m:'💪'},
+{id:'ob10',t:'w',x:'s_to',a:'i',c:'ob',e:'nie je to vybrané slovo — po S píšeme mäkké i'},
+{id:'ob11',t:'w',x:'s_vý',a:'i',c:'ob',e:'nie je to vybrané slovo — po S píšeme mäkké i'},
+{id:'ob12',t:'w',x:'v_dieť',a:'i',c:'ob',e:'nie je to vybrané slovo — po V píšeme mäkké i',m:'👀'},
+{id:'ob13',t:'w',x:'v_dly',a:'i',c:'ob',e:'nie je to vybrané slovo — po V píšeme mäkké i'},
+{id:'ob14',t:'w',x:'z_ma',a:'i',c:'ob',e:'nie je to vybrané slovo — po Z píšeme mäkké i',m:'❄️'},
+{id:'ob15',t:'w',x:'z_sk',a:'i',c:'ob',e:'nie je to vybrané slovo — po Z píšeme mäkké i',m:'💰'},
+/* ---- Zradné dvojice (17, vety) ---- */
+{id:'pr01',t:'s',x:'Cez prázdniny chcem b_ť u starkej.',a:'y',c:'pr',e:'byť = nachádzať sa, existovať (vybrané slovo po B)',w:'byť'},
+{id:'pr02',t:'s',x:'Nie je pekné b_ť spolužiakov.',a:'i',c:'pr',e:'biť = udierať — píšeme mäkké i',w:'biť'},
+{id:'pr03',t:'s',x:'Rytieri chceli dob_ť hrad.',a:'y',c:'pr',e:'dobyť = zmocniť sa (vybrané slovo po B)',w:'dobyť'},
+{id:'pr04',t:'s',x:'Potrebujem si dob_ť mobil.',a:'i',c:'pr',e:'dobiť = doplniť energiu — mäkké i',w:'dobiť',m:'🔋'},
+{id:'pr05',t:'s',x:'M_ sme včera vyhrali zápas.',a:'y',c:'pr',e:'my = viacerí, množné číslo',w:'my'},
+{id:'pr06',t:'s',x:'Podaj m_, prosím, tú knihu.',a:'i',c:'pr',e:'mi = mne, jednotné číslo',w:'mi'},
+{id:'pr07',t:'s',x:'V noci na strome húkal v_r.',a:'ý',c:'pr',e:'výr = druh sovy (vybrané slovo po V)',w:'výr',m:'🦉'},
+{id:'pr08',t:'s',x:'Voda v rieke vytvorila v_r.',a:'í',c:'pr',e:'vír = krútňava — mäkké í',w:'vír',m:'🌀'},
+{id:'pr09',t:'s',x:'Vlk začal v noci v_ť.',a:'y',c:'pr',e:'vyť = vydávať zvuk (vybrané slovo po V)',w:'vyť',m:'🐺'},
+{id:'pr10',t:'s',x:'Babka bude v_ť veniec z kvetov.',a:'i',c:'pr',e:'viť = pliesť — mäkké i',w:'viť',m:'💐'},
+{id:'pr11',t:'s',x:'Sliepky sedeli na b_dle.',a:'i',c:'pr',e:'bidlo = žrď — mäkké i',w:'bidlo',m:'🐔'},
+{id:'pr12',t:'s',x:'Rodina si hľadala nové b_dlo.',a:'y',c:'pr',e:'bydlo = bývanie (vybrané slovo po B)',w:'bydlo'},
+{id:'pr13',t:'s',x:'Báseň má pekný r_m.',a:'ý',c:'pr',e:'rým = zvuková zhoda slov (vybrané slovo po R)',w:'rým',m:'🎵'},
+{id:'pr14',t:'s',x:'Hlavné mesto Talianska je R_m.',a:'í',c:'pr',e:'Rím = mesto — mäkké í',w:'Rím',m:'🏛️'},
+{id:'pr15',t:'s',x:'V lese tancovala krásna v_la.',a:'í',c:'pr',e:'víla = rozprávková bytosť — mäkké í',w:'víla',m:'🧚'},
+{id:'pr16',t:'s',x:'Líška v_la na mesiac celú noc.',a:'y',c:'pr',e:'vyla = od slovesa vyť (vybrané slovo po V)',w:'vyla'},
+{id:'pr17',t:'s',x:'Na palacinky si dáme sladký s_rup.',a:'i',c:'pr',e:'sirup — cudzie slovo s mäkkým i (nie je od slova syr!)',w:'sirup',m:'🍯'},
+/* ---- Gramatické koncovky (42, vety) ---- */
+{id:'g01',t:'s',x:'Pekn_ chlapci sa hrali na ihrisku.',a:'í',c:'gr',e:'mužské osoby v množnom čísle → mäkké í (pekní chlapci)',w:'pekní'},
+{id:'g02',t:'s',x:'Pred domom stál vysok_ strom.',a:'ý',c:'gr',e:'jednotné číslo → tvrdé ý (vysoký strom)',w:'vysoký'},
+{id:'g03',t:'s',x:'Múdr_ žiaci vyriešili úlohu.',a:'i',c:'gr',e:'mužské osoby v množnom čísle → mäkké i (po dlhej slabike krátke: múdri)',w:'múdri'},
+{id:'g04',t:'s',x:'Mil_ susedia nás pozdravili.',a:'í',c:'gr',e:'mužské osoby v množnom čísle → mäkké í (milí susedia)',w:'milí'},
+{id:'g05',t:'s',x:'Na kopci stojí star_ hrad.',a:'ý',c:'gr',e:'jednotné číslo → tvrdé ý (starý hrad)',w:'starý'},
+{id:'g06',t:'s',x:'Star_ rodičia nám doniesli koláč.',a:'í',c:'gr',e:'mužské osoby v množnom čísle → mäkké í (starí rodičia)',w:'starí'},
+{id:'g07',t:'s',x:'Chlap_ opravovali strechu.',a:'i',c:'gr',e:'mužské osoby v množnom čísle → i (chlapi, vzor chlap)',w:'chlapi'},
+{id:'g08',t:'s',x:'V lese rástli vysoké dub_.',a:'y',c:'gr',e:'neživotné podstatné meno → y (duby, vzor dub)',w:'duby'},
+{id:'g09',t:'s',x:'Žen_ spievali ľudové piesne.',a:'y',c:'gr',e:'vzor žena → y (ženy)',w:'ženy'},
+{id:'g10',t:'s',x:'Na lúke pobehovali ps_.',a:'y',c:'gr',e:'zvieratá v množnom čísle → y (psy)',w:'psy',m:'🐕'},
+{id:'g11',t:'s',x:'Nad poľom krúžili vták_.',a:'y',c:'gr',e:'zvieratá v množnom čísle → y (vtáky)',w:'vtáky',m:'🐦'},
+{id:'g12',t:'s',x:'Ryb_ plávali v potoku.',a:'y',c:'gr',e:'vzor žena → y (ryby)',w:'ryby',m:'🐟'},
+{id:'g13',t:'s',x:'Kost_ boli rozhádzané po dvore.',a:'i',c:'gr',e:'vzor kosť → i (kosti)',w:'kosti',m:'🦴'},
+{id:'g14',t:'s',x:'Deti sa hral_ celé popoludnie.',a:'i',c:'gr',e:'minulý čas: v množnom čísle vždy -li',w:'hrali'},
+{id:'g15',t:'s',x:'Ženy varil_ chutný obed.',a:'i',c:'gr',e:'minulý čas: vždy -li, aj pri ženách',w:'varili'},
+{id:'g16',t:'s',x:'Autá stál_ pred školou.',a:'i',c:'gr',e:'minulý čas: vždy -li, aj pri veciach',w:'stáli'},
+{id:'g17',t:'s',x:'Chlapci vyhral_ turnaj.',a:'i',c:'gr',e:'minulý čas: v množnom čísle vždy -li',w:'vyhrali'},
+{id:'g18',t:'s',x:'Na oblohe žiaril_ hviezdy.',a:'i',c:'gr',e:'minulý čas: vždy -li, aj pri hviezdach',w:'žiarili'},
+{id:'g19',t:'s',x:'T_ chlapci sú moji kamaráti.',a:'í',c:'gr',e:'tí = ukazovacie zámeno pri mužských osobách → í',w:'tí'},
+{id:'g20',t:'s',x:'Muži dobehli do cieľa. On_ boli najrýchlejší.',a:'i',c:'gr',e:'oni = mužské osoby → mäkké i',w:'oni'},
+{id:'g21',t:'s',x:'Ženy dobehli do cieľa. On_ boli najrýchlejšie.',a:'y',c:'gr',e:'ony = ostatné rody (ženy, deti, veci) → tvrdé y',w:'ony'},
+{id:'g22',t:'s',x:'Chlapci tam šli sam_.',a:'i',c:'gr',e:'sami = mužské osoby → mäkké i',w:'sami'},
+{id:'g23',t:'s',x:'Dievčatá tam šli sam_.',a:'y',c:'gr',e:'samy = ostatné rody → tvrdé y',w:'samy'},
+{id:'g24',t:'s',x:'Bratia sa rad_ hrajú vonku.',a:'i',c:'gr',e:'radi = mužské osoby → mäkké i',w:'radi'},
+{id:'g25',t:'s',x:'Sestry sa rad_ hrajú vonku.',a:'y',c:'gr',e:'rady = ostatné rody → tvrdé y',w:'rady'},
+{id:'g26',t:'s',x:'Všetc_ žiaci písali test.',a:'i',c:'gr',e:'všetci = mužské osoby → mäkké i',w:'všetci'},
+{id:'g27',t:'s',x:'Ktor_ chlapci vyhrali?',a:'í',c:'gr',e:'ktorí = mužské osoby v množnom čísle → í',w:'ktorí'},
+{id:'g28',t:'s',x:'Siedm_ trpaslíci pomáhali Snehulienke.',a:'i',c:'gr',e:'siedmi (koľkí?) = základná číslovka pri osobách → i',w:'siedmi'},
+{id:'g29',t:'s',x:'Siedm_ trpaslík bol najmenší.',a:'y',c:'gr',e:'siedmy (koľký v poradí?) = radová číslovka → y',w:'siedmy'},
+{id:'g30',t:'s',x:'Katkin_ bratia hrajú futbal.',a:'i',c:'gr',e:'Katkini = mužské osoby v množnom čísle → i',w:'Katkini'},
+{id:'g31',t:'s',x:'S otcov_mi kolegami sme sa stretli.',a:'ý',c:'gr',e:'inštrumentál množného čísla → -ými (s otcovými)',w:'otcovými'},
+{id:'g32',t:'s',x:'S mil_mi ľuďmi je radosť pracovať.',a:'ý',c:'gr',e:'inštrumentál množného čísla → -ými (milí ľudia, ale s milými!)',w:'milými'},
+{id:'g33',t:'s',x:'Um_ si ruky pred jedlom!',a:'y',c:'gr',e:'umy = rozkaz od slovesa umyť (vybrané po M)',w:'umy',m:'🧼'},
+{id:'g34',t:'s',x:'Skr_ sa za strom!',a:'y',c:'gr',e:'skry = rozkaz od slovesa skryť (vybrané po R)',w:'skry'},
+{id:'g35',t:'s',x:'Bývame na tejto ulic_.',a:'i',c:'gr',e:'vzor ulica → i (na ulici)',w:'ulici'},
+{id:'g36',t:'s',x:'Na dlan_ mu sedela lienka.',a:'i',c:'gr',e:'vzor dlaň → i (na dlani)',w:'dlani',m:'🐞'},
+{id:'g37',t:'s',x:'Bez mam_ nikam nejdem.',a:'y',c:'gr',e:'genitív vzoru žena → y (bez mamy)',w:'mamy'},
+{id:'g38',t:'s',x:'Do škol_ chodíme každé ráno.',a:'y',c:'gr',e:'genitív vzoru žena → y (do školy)',w:'školy',m:'🏫'},
+{id:'g39',t:'s',x:'Muž_ pracovali na stavbe.',a:'i',c:'gr',e:'mužské osoby v množnom čísle → i (muži)',w:'muži'},
+{id:'g40',t:'s',x:'Vlak_ meškali pre sneh.',a:'y',c:'gr',e:'neživotné podstatné meno → y (vlaky)',w:'vlaky',m:'🚂'},
+{id:'g41',t:'s',x:'Zošit_ ležali na lavici.',a:'y',c:'gr',e:'neživotné podstatné meno → y (zošity)',w:'zošity'},
+{id:'g42',t:'s',x:'Kamarát_ prišli na návštevu.',a:'i',c:'gr',e:'mužské osoby v množnom čísle → i (kamaráti)',w:'kamaráti'},
+/* ---- Cudzie slová a výnimky (17) ---- */
+{id:'cu01',t:'w',x:'f_zika',a:'y',c:'cu',e:'cudzie slovo — po F píšeme y iba v cudzích slovách',m:'⚛️'},
+{id:'cu02',t:'w',x:'bic_kel',a:'y',c:'cu',e:'cudzie slovo — po C tu výnimočne píšeme y',m:'🚲'},
+{id:'cu03',t:'w',x:'c_klista',a:'y',c:'cu',e:'cudzie slovo — po C tu výnimočne píšeme y',m:'🚴'},
+{id:'cu04',t:'w',x:'c_linder',a:'y',c:'cu',e:'cudzie slovo — po C tu výnimočne píšeme y',m:'🎩'},
+{id:'cu05',t:'w',x:'ol_mpiáda',a:'y',c:'cu',e:'cudzie slovo — zapamätaj si y',m:'🏅'},
+{id:'cu06',t:'w',x:'s_stém',a:'y',c:'cu',e:'cudzie slovo — zapamätaj si y',m:'💻'},
+{id:'cu07',t:'w',x:'k_no',a:'i',c:'cu',e:'cudzie slovo — po tvrdej K tu výnimočne píšeme i',m:'🎬'},
+{id:'cu08',t:'w',x:'g_tara',a:'i',c:'cu',e:'cudzie slovo — po tvrdej G tu výnimočne píšeme i',m:'🎸'},
+{id:'cu09',t:'w',x:'mik_na',a:'i',c:'cu',e:'cudzie slovo — po tvrdej K píšeme i',m:'🧥'},
+{id:'cu10',t:'w',x:'d_ktát',a:'i',c:'cu',e:'cudzie slovo — po D píšeme i, hoci znie tvrdo',m:'📝'},
+{id:'cu11',t:'w',x:'h_stória',a:'i',c:'cu',e:'cudzie slovo — po tvrdej H tu píšeme i',m:'📜'},
+{id:'cu12',t:'w',x:'k_lometer',a:'i',c:'cu',e:'cudzia predpona kilo- sa píše s i'},
+{id:'cu13',t:'w',x:'t_ger',a:'i',c:'cu',e:'v slovenčine píšeme tiger s mäkkým i',m:'🐯'},
+{id:'cu14',t:'w',x:'kikir_kať',a:'í',c:'cu',e:'zvukomalebné slovo — vždy mäkké i',m:'🐓'},
+{id:'cu15',t:'w',x:'t_kať',a:'i',c:'cu',e:'zvukomalebné slovo (tik-tak) — mäkké i',m:'⏱️'},
+{id:'cu16',t:'w',x:'od_sť',a:'í',c:'cu',e:'predpona od- + ísť: i z koreňa slova zostáva'},
+{id:'cu17',t:'w',x:'pred_zba',a:'i',c:'cu',e:'predpona pred- + izba: i z koreňa slova zostáva',m:'🚪'}
+];
+/*DICT-END*/
+
+/* =============================================================
+   NASTAVENIA, ŠTATISTIKY, VÝBER SLOV
+   ============================================================= */
+function el(i){ return document.getElementById(i); }
+var ALL_CATS = CATS.map(function(c){ return c[0]; });
+var SET = store.get(K_SET) || { count:15, cats:ALL_CATS.slice(), sound:true };
+if (!SET.cats || !SET.cats.length) SET.cats = ALL_CATS.slice();
+if (typeof SET.count !== "number") SET.count = 15;
+if (typeof SET.sound !== "boolean") SET.sound = true;
+var STATS = store.get(K_STATS) || {};
+function saveSet(){ store.set(K_SET, SET); }
+function saveStats(){ store.set(K_STATS, STATS); }
+
+function fullOf(d){ return d.x.replace("_", d.a); }
+function dispOf(d){ return d.w ? d.w : fullOf(d); }
+function isSoft(ch){ return ch === "i" || ch === "í"; }
+function countIY(s){ var m = s.match(/[iíyýIÍYÝ]/g); return m ? m.length : 0; }
+function shuffle(arr){
+  for (var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+/* Váhový algoritmus: nové slovo 1.3, chyba ×3 (max 30), správne ×0.6 (min 0.35). */
+var W_NEW = 1.3, W_BAD = 3, W_MAX = 30, W_OK = 0.6, W_MIN = 0.35;
+function weightOf(id){ var s = STATS[id]; return s ? s.w : W_NEW; }
+function markAnswer(id, ok){
+  var s = STATS[id] || (STATS[id] = { s:0, ok:0, bad:0, w:W_NEW, last:0 });
+  s.s++; s.last = Date.now();
+  if (ok){ s.ok++; s.w = Math.max(W_MIN, s.w * W_OK); }
+  else   { s.bad++; s.w = Math.min(W_MAX, s.w * W_BAD); }
+  saveStats();
+}
+function poolFor(cats){ return DICT.filter(function(d){ return cats.indexOf(d.c) >= 0; }); }
+function poolForMode(mode){
+  var p = poolFor(SET.cats);
+  if (mode === "arcade") p = p.filter(function(d){ return d.t === "w"; });
+  if (mode === "find")   p = p.filter(function(d){ return d.t === "s" && countIY(fullOf(d)) >= 2; });
+  return p;
+}
+/* vážený výber bez opakovania */
+function pickRound(pool, n){
+  var src = pool.slice(), out = [];
+  n = Math.min(n, src.length);
+  while (out.length < n){
+    var total = 0, i;
+    for (i = 0; i < src.length; i++) total += weightOf(src[i].id);
+    var r = Math.random() * total;
+    for (i = 0; i < src.length; i++){
+      r -= weightOf(src[i].id);
+      if (r <= 0) break;
+    }
+    if (i >= src.length) i = src.length - 1;
+    out.push(src[i]); src.splice(i, 1);
+  }
+  return out;
+}
+
+/* =============================================================
+   OBRAZOVKY
+   ============================================================= */
+function show(id){
+  var scr = document.querySelectorAll(".screen");
+  for (var i = 0; i < scr.length; i++) scr[i].classList.remove("on");
+  el(id).classList.add("on");
+}
+function scrOn(id){ return el(id).classList.contains("on"); }
+var homeBtns = document.querySelectorAll("[data-home]");
+for (var hb = 0; hb < homeBtns.length; hb++){
+  homeBtns[hb].addEventListener("click", function(){ stopArcade(); show("scr-home"); refreshHome(); });
+}
+
+/* ---------- Domov ---------- */
+function renderCats(){
+  var box = el("catBox"); box.innerHTML = "";
+  CATS.forEach(function(c){
+    var lab = document.createElement("span");
+    lab.className = "cat" + (SET.cats.indexOf(c[0]) >= 0 ? " onx" : "");
+    lab.textContent = c[1];
+    lab.addEventListener("click", function(){
+      var ix = SET.cats.indexOf(c[0]);
+      if (ix >= 0) SET.cats.splice(ix, 1); else SET.cats.push(c[0]);
+      saveSet(); renderCats(); refreshHome();
+    });
+    box.appendChild(lab);
+  });
+}
+function refreshHome(){
+  var pool = poolFor(SET.cats);
+  var max = Math.max(10, pool.length);
+  var range = el("countRange");
+  range.max = max;
+  if (SET.count > max) SET.count = max;
+  if (SET.count < 10) SET.count = Math.min(10, max);
+  range.value = SET.count;
+  el("countVal").textContent = SET.count;
+  el("poolInfo").textContent = "V zásobe: " + pool.length + " položiek z vybraných kategórií (celý slovník: " + DICT.length + ").";
+  el("btnSound").textContent = SET.sound ? "🔊 Zvuk" : "🔇 Zvuk";
+}
+el("countRange").addEventListener("input", function(){
+  SET.count = parseInt(this.value, 10);
+  el("countVal").textContent = SET.count;
+  saveSet();
+});
+var quicks = document.querySelectorAll(".quick button");
+for (var qb = 0; qb < quicks.length; qb++){
+  quicks[qb].addEventListener("click", function(){
+    var v = this.getAttribute("data-q");
+    SET.count = (v === "max") ? parseInt(el("countRange").max, 10) : parseInt(v, 10);
+    saveSet(); refreshHome();
+  });
+}
+el("btnSound").addEventListener("click", function(){ SET.sound = !SET.sound; saveSet(); refreshHome(); if (SET.sound) sndGood(); });
+el("btnStats").addEventListener("click", function(){ renderStats(); show("scr-stats"); });
+var modeCards = document.querySelectorAll(".mode-card");
+for (var mc = 0; mc < modeCards.length; mc++){
+  modeCards[mc].addEventListener("click", function(){ launch(this.getAttribute("data-mode")); });
+}
+
+/* ---------- Spustenie kola ---------- */
+var R = null;
+function launch(mode){
+  var p = poolForMode(mode);
+  if (!p.length){
+    alert("Pre tento režim treba vybrať kategórie s vhodnými položkami (režim „Nájdi chybu“ potrebuje vety — napr. Zradné dvojice alebo Gramatické koncovky).");
+    return;
+  }
+  startRound(mode, pickRound(p, SET.count));
+}
+function startRound(mode, items){
+  if (!items.length) return;
+  R = { mode: mode, items: items, i: 0, ok: 0, bad: 0, mist: [], streak: 0, lives: 3, score: 0, done: false };
+  if (mode === "quiz"){ show("scr-quiz"); nextQuiz(); }
+  else if (mode === "find"){ show("scr-find"); nextFind(); }
+  else { show("scr-arcade"); startArcade(); }
+}
+
+/* =============================================================
+   REŽIM 1: DOPLŇOVAČKA
+   ============================================================= */
+var busy = false;
+function renderBlank(container, d, slotId){
+  container.innerHTML = "";
+  var parts = d.x.split("_");
+  container.appendChild(document.createTextNode(parts[0]));
+  var slot = document.createElement("span");
+  slot.className = "slot"; slot.id = slotId; slot.textContent = "y";
+  container.appendChild(slot);
+  container.appendChild(document.createTextNode(parts[1]));
+}
+function chosenChar(d, soft){
+  var lng = (d.a === "í" || d.a === "ý");
+  return soft ? (lng ? "í" : "i") : (lng ? "ý" : "y");
+}
+function nextQuiz(){
+  if (R.i >= R.items.length) return endRound();
+  var d = R.items[R.i];
+  busy = false;
+  el("qNext").style.display = "none";
+  el("btnI").disabled = false; el("btnY").disabled = false;
+  el("qEmoji").textContent = d.m || "";
+  var w = el("qWord");
+  w.className = "q-word" + (d.t === "s" ? " sent" : "");
+  renderBlank(w, d, "slot");
+  el("qHint").innerHTML = "";
+  el("qStreak").textContent = R.streak >= 2 ? "🔥 " + R.streak : "";
+  el("qProg").style.width = (R.i / R.items.length * 100) + "%";
+}
+function answerQuiz(soft){
+  if (busy || !R || R.mode !== "quiz") return;
+  busy = true;
+  var d = R.items[R.i];
+  var ok = isSoft(d.a) === soft;
+  var slot = el("slot");
+  slot.textContent = chosenChar(d, soft);
+  slot.classList.add("filled", ok ? "good" : "bad");
+  markAnswer(d.id, ok);
+  var hint = el("qHint");
+  if (ok){
+    R.ok++; R.streak++;
+    sndGood(); confetti(10);
+    hint.innerHTML = "<b>" + fullOf(d) + "</b> — " + d.e;
+    if (R.streak === 5 || R.streak === 10 || R.streak === 15 || R.streak === 20){ sndFanfare(); confetti(40); }
+    setTimeout(function(){ R.i++; nextQuiz(); }, 950);
+  } else {
+    R.bad++; R.streak = 0; R.mist.push(d);
+    sndBad();
+    slot.classList.add("squig");
+    var card = el("qCard");
+    card.classList.remove("card-shake"); void card.offsetWidth; card.classList.add("card-shake");
+    hint.innerHTML = "Správne: <b>" + fullOf(d) + "</b><br>" + d.e;
+    el("btnI").disabled = true; el("btnY").disabled = true;
+    el("qNext").style.display = "block";
+  }
+}
+el("qNext").addEventListener("click", function(){ R.i++; nextQuiz(); });
+el("btnI").addEventListener("click", function(){ answerQuiz(true); });
+el("btnY").addEventListener("click", function(){ answerQuiz(false); });
+
+/* =============================================================
+   REŽIM 2: PADAJÚCE SLOVÁ
+   ============================================================= */
+var A = null;
+function startArcade(){
+  A = { dur: 8000, active: false, raf: 0 };
+  updHud();
+  nextArcade();
+}
+function updHud(){
+  var s = "";
+  for (var i = 0; i < 3; i++) s += (i < R.lives) ? "❤️" : "🖤";
+  el("aLives").textContent = s;
+  el("aScore").textContent = R.score;
+  el("aStreak").textContent = R.streak >= 2 ? "🔥 " + R.streak : "";
+}
+function nextArcade(){
+  if (!R || R.mode !== "arcade") return;
+  if (R.i >= R.items.length || R.lives <= 0) return endRound();
+  var d = R.items[R.i];
+  renderBlank(el("faller"), d, "aslot");
+  el("faller").style.top = "-70px";
+  el("arcFb").classList.remove("on");
+  el("aBtnI").disabled = false; el("aBtnY").disabled = false;
+  A.start = performance.now();
+  A.active = true;
+  cancelAnimationFrame(A.raf);
+  A.raf = requestAnimationFrame(fallStep);
+}
+function fallStep(now){
+  if (!A || !A.active) return;
+  var h = el("sky").clientHeight;
+  var p = (now - A.start) / A.dur;
+  if (p >= 1) return arcMiss();
+  el("faller").style.top = (-70 + p * (h + 30)) + "px";
+  A.raf = requestAnimationFrame(fallStep);
+}
+function arcAnswer(soft){
+  if (!A || !A.active || !R || R.mode !== "arcade") return;
+  A.active = false; cancelAnimationFrame(A.raf);
+  var d = R.items[R.i];
+  var ok = isSoft(d.a) === soft;
+  markAnswer(d.id, ok);
+  var slot = el("aslot");
+  if (slot){ slot.textContent = chosenChar(d, soft); slot.classList.add("filled", ok ? "good" : "bad"); }
+  if (ok){
+    R.ok++; R.score++; R.streak++;
+    if (R.ok % 3 === 0) A.dur = Math.max(3500, A.dur - 350);
+    sndGood(); confetti(8); updHud();
+    var fb = el("arcFb");
+    fb.innerHTML = "✅ <b>" + fullOf(d) + "</b>";
+    fb.classList.add("on");
+    setTimeout(function(){ R.i++; nextArcade(); }, 650);
+  } else {
+    arcWrong(d, "Ups, nesprávne.");
+  }
+}
+function arcMiss(){
+  if (!A || !A.active) return;
+  A.active = false; cancelAnimationFrame(A.raf);
+  var d = R.items[R.i];
+  markAnswer(d.id, false);
+  arcWrong(d, "Slovo dopadlo!");
+}
+function arcWrong(d, ttl){
+  R.bad++; R.streak = 0; R.lives--; R.mist.push(d);
+  sndBad(); updHud();
+  var fb = el("arcFb");
+  fb.innerHTML = ttl + "<br>Správne: <b>" + fullOf(d) + "</b><br><span style=\"font-size:15px;color:#6B6B78\">" + d.e + "</span>";
+  fb.classList.add("on");
+  el("aBtnI").disabled = true; el("aBtnY").disabled = true;
+  setTimeout(function(){ R.i++; nextArcade(); }, 2100);
+}
+function stopArcade(){ if (A){ A.active = false; cancelAnimationFrame(A.raf); } }
+el("aBtnI").addEventListener("click", function(){ arcAnswer(true); });
+el("aBtnY").addEventListener("click", function(){ arcAnswer(false); });
+
+/* =============================================================
+   REŽIM 3: NÁJDI CHYBU
+   ============================================================= */
+var FLIP = { "i":"y", "y":"i", "í":"ý", "ý":"í" };
+function nextFind(){
+  if (!R || R.mode !== "find") return;
+  if (R.i >= R.items.length) return endRound();
+  var d = R.items[R.i];
+  R.done = false;
+  el("fNext").style.display = "none";
+  el("fStreak").textContent = R.streak >= 2 ? "🔥 " + R.streak : "";
+  el("fProg").style.width = (R.i / R.items.length * 100) + "%";
+  var full = fullOf(d);
+  var blank = d.x.indexOf("_");
+  var shown = full.slice(0, blank) + FLIP[d.a] + full.slice(blank + 1);
+  var box = el("fSent"); box.innerHTML = "";
+  for (var i = 0; i < shown.length; i++){
+    var ch = shown[i];
+    if (/[iíyýIÍYÝ]/.test(ch)){
+      var sp = document.createElement("span");
+      sp.className = "iy"; sp.textContent = ch;
+      sp.setAttribute("data-pos", i);
+      sp.addEventListener("click", findTap);
+      box.appendChild(sp);
+    } else {
+      box.appendChild(document.createTextNode(ch));
+    }
+  }
+  R.blank = blank;
+  el("fHint").innerHTML = "";
+}
+function findTap(ev){
+  if (!R || R.done) return;
+  R.done = true;
+  var d = R.items[R.i];
+  var sp = ev.currentTarget;
+  var ok = parseInt(sp.getAttribute("data-pos"), 10) === R.blank;
+  markAnswer(d.id, ok);
+  if (ok){
+    R.ok++; R.streak++;
+    sp.textContent = d.a; sp.classList.add("hit-good");
+    sndGood(); confetti(10);
+    el("fHint").innerHTML = "<b>" + fullOf(d) + "</b> — " + d.e;
+    if (R.streak === 5 || R.streak === 10 || R.streak === 15){ sndFanfare(); confetti(40); }
+    setTimeout(function(){ R.i++; nextFind(); }, 1150);
+  } else {
+    R.bad++; R.streak = 0; R.mist.push(d);
+    sp.classList.add("hit-bad"); sndBad();
+    var card = el("fCard");
+    card.classList.remove("card-shake"); void card.offsetWidth; card.classList.add("card-shake");
+    var spans = el("fSent").querySelectorAll(".iy");
+    for (var i = 0; i < spans.length; i++){
+      if (parseInt(spans[i].getAttribute("data-pos"), 10) === R.blank){
+        spans[i].textContent = d.a; spans[i].classList.add("reveal");
+      }
+    }
+    el("fHint").innerHTML = "Chyba bola tu: <b>" + fullOf(d) + "</b><br>" + d.e;
+    el("fNext").style.display = "block";
+  }
+}
+el("fNext").addEventListener("click", function(){ R.i++; nextFind(); });
+
+/* =============================================================
+   VÝSLEDKY
+   ============================================================= */
+function endRound(){
+  stopArcade();
+  var total = R.ok + R.bad;
+  var pct = total ? Math.round(R.ok / total * 100) : 0;
+  el("rStars").textContent = pct >= 90 ? "⭐⭐⭐" : pct >= 70 ? "⭐⭐" : pct >= 50 ? "⭐" : "💪";
+  el("rScore").textContent = R.ok + " / " + total + " správne (" + pct + " %)";
+  var mist = el("rMist"); mist.innerHTML = "";
+  if (R.mist.length){
+    var h = document.createElement("h4");
+    h.textContent = "Kde sa stala chyba:";
+    h.style.margin = "6px 0";
+    mist.appendChild(h);
+    R.mist.forEach(function(d){
+      var dv = document.createElement("div");
+      dv.className = "mist";
+      dv.innerHTML = "<b>" + fullOf(d) + "</b><br>" + d.e;
+      mist.appendChild(dv);
+    });
+  } else {
+    var dv0 = document.createElement("div");
+    dv0.className = "mist";
+    dv0.textContent = "Bez jedinej chyby. Paráda! 🎉";
+    mist.appendChild(dv0);
+  }
+  el("rOnlyBad").style.display = R.mist.length ? "block" : "none";
+  if (pct >= 90 && total > 0){ sndFanfare(); confetti(60); }
+  show("scr-results");
+}
+el("rAgain").addEventListener("click", function(){ launch(R.mode); });
+el("rOnlyBad").addEventListener("click", function(){
+  var uniq = [], seen = {};
+  R.mist.forEach(function(d){ if (!seen[d.id]){ seen[d.id] = 1; uniq.push(d); } });
+  startRound("quiz", shuffle(uniq));
+});
+
+/* =============================================================
+   ŠTATISTIKY, EXPORT / IMPORT
+   ============================================================= */
+function problemItems(){
+  return DICT.filter(function(d){
+    var s = STATS[d.id];
+    if (!s || !s.bad) return false;
+    return s.bad >= s.ok || (s.ok / s.s) < 0.6;
+  }).sort(function(a, b){ return weightOf(b.id) - weightOf(a.id); });
+}
+function renderStats(){
+  var body = el("statBody"); body.innerHTML = "";
+  var tot = 0, okc = 0;
+  Object.keys(STATS).forEach(function(id){ tot += STATS[id].s; okc += STATS[id].ok; });
+  var l1 = document.createElement("div"); l1.className = "stat-line";
+  l1.innerHTML = "<span>Zodpovedané spolu</span><b>" + tot + "</b>"; body.appendChild(l1);
+  var l2 = document.createElement("div"); l2.className = "stat-line";
+  l2.innerHTML = "<span>Úspešnosť</span><b>" + (tot ? Math.round(okc / tot * 100) : 0) + " %</b>"; body.appendChild(l2);
+  CATS.forEach(function(c){
+    var t = 0, o = 0;
+    DICT.forEach(function(d){
+      if (d.c === c[0] && STATS[d.id]){ t += STATS[d.id].s; o += STATS[d.id].ok; }
+    });
+    if (!t) return;
+    var l = document.createElement("div"); l.className = "stat-line";
+    l.innerHTML = "<span>" + c[1] + "</span><span>" + o + "/" + t + "</span>";
+    body.appendChild(l);
+    var b = document.createElement("div"); b.className = "bar";
+    b.innerHTML = "<i style=\"width:" + Math.round(o / t * 100) + "%\"></i>";
+    body.appendChild(b);
+  });
+  var probs = problemItems();
+  if (probs.length){
+    var h = document.createElement("h4");
+    h.textContent = "🔥 Najproblémovejšie slová";
+    h.style.margin = "14px 0 4px";
+    body.appendChild(h);
+    probs.slice(0, 12).forEach(function(d){
+      var s = STATS[d.id];
+      var p = document.createElement("div"); p.className = "prob";
+      p.innerHTML = "<span>" + dispOf(d) + "</span><small>" + s.ok + "/" + s.s + " správne</small>";
+      body.appendChild(p);
+    });
+  }
+  if (!tot){
+    var e0 = document.createElement("div"); e0.className = "mist";
+    e0.textContent = "Zatiaľ tu nič nie je — zahraj si prvé kolo a štatistiky sa objavia.";
+    body.appendChild(e0);
+  }
+}
+el("btnProblem").addEventListener("click", function(){
+  var items = problemItems();
+  if (!items.length){ alert("Zatiaľ žiadne problémové slová. Len tak ďalej!"); return; }
+  startRound("quiz", items.slice(0, Math.max(10, Math.min(items.length, SET.count))));
+});
+el("btnExport").addEventListener("click", function(){
+  var data = { app: "pravopisny-trener", ver: "2.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
+  var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "pravopisny-trener-stats.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+});
+el("btnImport").addEventListener("click", function(){ el("impFile").click(); });
+el("impFile").addEventListener("change", function(){
+  var f = this.files[0]; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try {
+      var obj = JSON.parse(rd.result);
+      if (obj && obj.stats){ STATS = obj.stats; saveStats(); }
+      if (obj && obj.settings){ SET = obj.settings; saveSet(); }
+      renderStats(); refreshHome();
+      alert("Import hotový.");
+    } catch (e){ alert("Súbor sa nepodarilo načítať — nie je to platný export."); }
+  };
+  rd.readAsText(f);
+  this.value = "";
+});
+el("btnReset").addEventListener("click", function(){
+  if (confirm("Naozaj vymazať všetky štatistiky? Toto sa nedá vrátiť späť.")){
+    STATS = {}; saveStats(); renderStats();
+  }
+});
+
+/* =============================================================
+   KLÁVESNICA: i / y odpovedá, Enter = ďalej
+   ============================================================= */
+document.addEventListener("keydown", function(ev){
+  var k = ev.key ? ev.key.toLowerCase() : "";
+  if (scrOn("scr-quiz")){
+    if (k === "i") answerQuiz(true);
+    else if (k === "y") answerQuiz(false);
+    else if (k === "enter" && el("qNext").style.display === "block"){ ev.preventDefault(); R.i++; nextQuiz(); }
+  } else if (scrOn("scr-arcade")){
+    if (k === "i") arcAnswer(true);
+    else if (k === "y") arcAnswer(false);
+  } else if (scrOn("scr-find")){
+    if (k === "enter" && el("fNext").style.display === "block"){ ev.preventDefault(); R.i++; nextFind(); }
+  }
+});
+
+/* štart */
+renderCats();
+refreshHome();
+</script>
+</body>
+</html>
+<!-- v2.0 (2026-07-18) — koniec súboru -->
