@@ -10,6 +10,7 @@ Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závis
 
 | Verzia | Dátum | Zmeny |
 |--------|------------|-------|
+| v5.0 | 2026-07-26 | Achievement a sovie oznámenia zostávajú zobrazené 3× dlhšie (klepnutím sa zavrú skôr). Nová žiarovka 💡 v hornej lište všetkých režimov — prehľad „Prečo i/y?" s poslednými zodpovedanými slovami (plný tvar + pravidlo) a logom posledných správ; v arkáde sa počas otvorenej žiarovky padanie poctivo pozastaví. Trvalý mini-návod na domovskej obrazovke. Väčšie medzery medzi slovami v režime Nájdi chybu. |
 | v4.0 | 2026-07-18 | Easter eggy a trofeje: detekcia „špekulantských" výberov (čisto-Y aj čisto-I) s achievementmi, trvalé odomknutie témy 🌙 Nočný zošit, ochrana váh v špekulantských kolách, trofeje Séria 10/20 a Perfektné kolo, interaktívna sova, trofejná polička v Štatistikách. |
 | v3.0 | 2026-07-18 | Nová obrazovka „📖 Vysvetlivky": slovník všetkých 245 položiek zoskupený podľa kategórií, vyhľadávanie bez ohľadu na diakritiku a veľkosť písmen, farebne zvýraznené i/y (tyrkysové mäkké, oranžové tvrdé) + pravidlo pri každej položke. |
 | v2.0 | 2026-07-18 | Tlačidlá odpovede výslovne ukazujú aj dlhé varianty: „i (í)" a „y (ý)" s popisom „mäkké/tvrdé — aj dlhé". Viditeľné označenie „verzia 2" na domovskej obrazovke. Verzia v exporte štatistík zvýšená na 2.0. Slovník bez zmeny. |
@@ -51,6 +52,21 @@ Vyhľadávanie funguje bez ohľadu na diakritiku a veľkosť písmen („byk" n�
 Tlačidlo **i (í)** platí pre krátke i aj dlhé í, tlačidlo **y (ý)** pre krátke
 y aj dlhé ý — správnu dĺžku doplní aplikácia sama. Slovník obsahuje všetky
 štyri varianty.
+
+### 💡 Žiarovka (od v5.0)
+
+V hornej lište každého režimu je žiarovka. Otvorí prehľad **„Prečo i/y?"**:
+
+- **Posledné slová v tomto kole** — zoznam už zodpovedaných položiek
+  (✅/❌, plný tvar s farebne zvýrazneným písmenom a pravidlo). Rieši situáciu,
+  keď správna odpoveď preskočí ďalej skôr, než si dieťa stihne prečítať
+  vysvetlenie.
+- **Posledné správy** — log achievementov a sovích odkazov z aktuálneho
+  sedenia, keby banner zmizol prirýchlo.
+
+V arkáde sa počas otvorenej žiarovky padanie slova pozastaví (vrátane čakania
+medzi slovami), takže sa nedá o nič prísť. Zatvorenie: ✕, klepnutie mimo
+kartu, Enter alebo Escape; počas otvorenej žiarovky klávesy i/y neodpovedajú.
 
 ---
 
@@ -184,4 +200,4 @@ Slovník a pravidlá boli pri tvorbe overené proti verejným školským zdrojom
 - Nevykonáva žiadne sieťové volania; všetko (zvuky, grafika, dáta) je vnorené.
 - Jediné zapisované dáta sú lokálne štatistiky hráča v prehliadači.
 
-<!-- v4.0 (2026-07-18) — koniec súboru -->
+<!-- v5.0 (2026-07-26) — koniec súboru -->
