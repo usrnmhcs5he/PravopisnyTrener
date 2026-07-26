@@ -5,6 +5,22 @@
   Interaktívna doplňovačka na precvičovanie slovenského pravopisu
 =====================================================================
   VERSION HISTORY
+  v4.0 (2026-07-18)
+    - Easter eggy a trofeje: genericka detekcia "spekulantskych"
+      vyberov (zasoba kola len y/y alebo len i/i) -> achievementy
+      Ypsilonovy spekulant a Ickovy spekulant.
+    - Odmena: trvale odomknutie temy Nocny zosit (tlacidlo v menu
+      viditelne od zaciatku, zosivene so zamkom; po odomknuti volne
+      prepinatelne, stav sa pamata; pri objave sa tema sama zapne).
+    - Ochrana adaptivneho algoritmu: v spekulantskych kolach sa pri
+      spravnych odpovediach vahy neznizuju (chyby plne); serie a
+      Perfektne kolo sa v nich nezapocitavaju.
+    - Dalsie trofeje: Seria 10, Seria 20, Perfektne kolo (100 %,
+      aspon 15 slov), tajna Sovia rec (25 klepnuti na sovu);
+      sova huka pri kazdom 5. klepnuti.
+    - Trofejna policka v Statistikach (tajne zamknute = ???),
+      achievement banner s fanfarou a konfetami, sovie bubliny.
+    - Verzia exportu statistik zvysena na 4.0.
   v3.0 (2026-07-18)
     - Nova obrazovka „Vysvetlivky": slovnik vsetkych 245 poloziek
       zoskupeny podla kategorii, s vyhladavanim (bez ohladu na
@@ -108,7 +124,9 @@ body{
 
 h1.title{font-size:34px;margin:2px 0 4px;letter-spacing:-.5px;}
 .subtitle{color:var(--ink-soft);margin:0 0 18px;font-size:16px;}
-.owl{font-size:52px;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.15));}
+.owl{font-size:52px;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.15));cursor:pointer;user-select:none;}
+.owl.hop{animation:hop .4s ease;}
+@keyframes hop{0%,100%{transform:none;}35%{transform:translateY(-10px) rotate(-8deg) scale(1.08);}70%{transform:translateY(0) rotate(5deg);}}
 
 /* ---------- domovská obrazovka ---------- */
 .modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0 22px;}
@@ -148,8 +166,8 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
   background:linear-gradient(135deg,var(--soft),var(--soft-deep));color:#fff;
   font-size:20px;font-weight:800;padding:16px;border-radius:16px;box-shadow:var(--shadow);}
 .big-cta:active{transform:scale(.98);}
-.home-foot{display:flex;gap:10px;margin-top:14px;}
-.home-foot .chip-btn{flex:1;}
+.home-foot{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.home-foot .chip-btn{flex:1;min-width:150px;}
 .verline{margin-top:14px;text-align:center;color:var(--ink-soft);font-size:13px;font-weight:700;letter-spacing:.04em;}
 
 /* ---------- kvíz ---------- */
@@ -259,6 +277,45 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
 .hl-y{color:var(--hard-deep);font-weight:800;}
 .home-foot .chip-btn{font-size:15px;padding:10px 8px;}
 
+/* ---------- achievement toasty a sovie bubliny ---------- */
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-140%);
+  background:linear-gradient(135deg,#FFD34D,#F0A72B);color:#3A2B00;border-radius:16px;
+  box-shadow:0 12px 30px rgba(0,0,0,.28);padding:12px 18px;z-index:120;min-width:250px;
+  max-width:92vw;text-align:center;transition:transform .35s ease;cursor:pointer;}
+.toast.onx{transform:translateX(-50%) translateY(0);}
+.toast .t1{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;opacity:.75;}
+.toast .t2{font-size:19px;font-weight:800;margin-top:2px;}
+.toast .t3{font-size:14px;font-weight:600;margin-top:2px;}
+.toast.owlmsg{background:var(--paper);color:var(--ink);border:2px solid var(--rule);
+  font-weight:600;text-align:left;line-height:1.45;}
+.chip-btn.locked{opacity:.5;cursor:not-allowed;}
+.chip-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ---------- nocny zosit (odomknutelna tema) ---------- */
+body.night{
+  --paper:#262633; --paper-deep:#17171F; --rule:#39495C; --margin:#C05B52;
+  --ink:#ECECF2; --ink-soft:#9B9BAC; --shadow:0 10px 30px rgba(0,0,0,.45);
+  background:
+    radial-gradient(1200px 600px at 85% -10%, #232338 0%, transparent 60%),
+    radial-gradient(1000px 700px at -10% 110%, #1C2733 0%, transparent 55%),
+    var(--paper-deep);
+}
+body.night .quick button,body.night .cat{background:#31313F;color:#C9C9D6;}
+body.night .cat.onx{background:#1F3A45;color:#7FD2E8;border-color:var(--soft);}
+body.night .progress,body.night .bar{background:#31313F;}
+body.night .mist,body.night .dict-item{background:#2C2C3A;}
+body.night .dict-search{background:#2C2C3A;box-shadow:inset 0 0 0 2px #3A3A4A;color:var(--ink);}
+body.night .dict-search:focus{box-shadow:inset 0 0 0 2px var(--soft);}
+body.night .prob{background:#3A2F2D;}
+body.night .next-btn{background:#4A4A5C;}
+body.night .faller{background:#2C2C3A;}
+body.night .sky{background:linear-gradient(180deg,#101528 0%,#1B2340 60%,#22303F 78%,#1E3326 78%,#16281D 100%);}
+body.night .sky::after{content:"🌙";position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:24px;opacity:.9;}
+body.night .arc-fb{background:rgba(28,28,42,.93);color:var(--ink);}
+body.night .iy:hover{background:#243642;}
+body.night .iy.hit-good{background:#1F3A2C;}
+body.night .iy.hit-bad{background:#452726;}
+
 /* ---------- konfety ---------- */
 .cf{position:fixed;top:-14px;font-size:20px;pointer-events:none;z-index:99;
   animation:cfall linear forwards;}
@@ -284,7 +341,7 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
   <section id="scr-home" class="screen on">
     <div class="paper tight">
       <div style="display:flex;align-items:center;gap:14px;">
-        <div class="owl">🦉</div>
+        <div class="owl" id="owlBtn" title="🦉">🦉</div>
         <div>
           <h1 class="title">Mäkké i či tvrdé y?</h1>
           <p class="subtitle">Pravopisný tréner — vyber si režim a poď na to!</p>
@@ -329,9 +386,10 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
       <div class="home-foot">
         <button class="chip-btn" id="btnStats">📊 Štatistiky</button>
         <button class="chip-btn" id="btnDict">📖 Vysvetlivky</button>
+        <button class="chip-btn" id="btnNight" disabled>🔒 Nočný zošit</button>
         <button class="chip-btn" id="btnSound">🔊 Zvuk</button>
       </div>
-      <div class="verline">verzia 3</div>
+      <div class="verline">verzia 4</div>
     </div>
   </section>
 
@@ -476,15 +534,17 @@ function tone(freq, dur, type, when, gain){
 function sndGood(){ tone(523.25,.11,"sine",0); tone(659.25,.11,"sine",.09); tone(783.99,.16,"sine",.18); }
 function sndBad(){ tone(160,.22,"sawtooth",0,.12); tone(110,.25,"sawtooth",.08,.12); }
 function sndFanfare(){ tone(523.25,.12,"triangle",0); tone(659.25,.12,"triangle",.1); tone(783.99,.12,"triangle",.2); tone(1046.5,.3,"triangle",.3,.22); }
+function sndHoot(){ tone(392,.16,"sine",0,.22); tone(294,.34,"sine",.2,.22); }
 
 /* konfety */
 var CF_EMO = ["🎉","⭐","✨","🟠","🔵","💛","🟢"];
-function confetti(n){
+function confetti(n, set){
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var arr = set || CF_EMO;
   for (var i=0;i<n;i++){
     var s = document.createElement("span");
     s.className = "cf";
-    s.textContent = CF_EMO[Math.floor(Math.random()*CF_EMO.length)];
+    s.textContent = arr[Math.floor(Math.random()*arr.length)];
     s.style.left = (5+Math.random()*90) + "vw";
     s.style.animationDuration = (1.3+Math.random()*1.4) + "s";
     s.style.fontSize = (14+Math.random()*16) + "px";
@@ -786,6 +846,9 @@ var SET = store.get(K_SET) || { count:15, cats:ALL_CATS.slice(), sound:true };
 if (!SET.cats || !SET.cats.length) SET.cats = ALL_CATS.slice();
 if (typeof SET.count !== "number") SET.count = 15;
 if (typeof SET.sound !== "boolean") SET.sound = true;
+if (!SET.ach) SET.ach = {};
+if (typeof SET.night !== "boolean") SET.night = false;
+if (typeof SET.owlTaps !== "number") SET.owlTaps = 0;
 var STATS = store.get(K_STATS) || {};
 function saveSet(){ store.set(K_SET, SET); }
 function saveStats(){ store.set(K_STATS, STATS); }
@@ -808,7 +871,7 @@ function weightOf(id){ var s = STATS[id]; return s ? s.w : W_NEW; }
 function markAnswer(id, ok){
   var s = STATS[id] || (STATS[id] = { s:0, ok:0, bad:0, w:W_NEW, last:0 });
   s.s++; s.last = Date.now();
-  if (ok){ s.ok++; s.w = Math.max(W_MIN, s.w * W_OK); }
+  if (ok){ s.ok++; if (!(R && R.egg)) s.w = Math.max(W_MIN, s.w * W_OK); }
   else   { s.bad++; s.w = Math.min(W_MAX, s.w * W_BAD); }
   saveStats();
 }
@@ -877,6 +940,11 @@ function refreshHome(){
   el("countVal").textContent = SET.count;
   el("poolInfo").textContent = "V zásobe: " + pool.length + " položiek z vybraných kategórií (celý slovník: " + DICT.length + ").";
   el("btnSound").textContent = SET.sound ? "🔊 Zvuk" : "🔇 Zvuk";
+  var nb = el("btnNight");
+  var unl = !!(SET.ach && (SET.ach.spekY || SET.ach.spekI));
+  nb.disabled = !unl;
+  nb.classList.toggle("locked", !unl);
+  nb.textContent = unl ? (SET.night ? "🌙 Nočný zošit ✓" : "🌙 Nočný zošit") : "🔒 Nočný zošit";
 }
 el("countRange").addEventListener("input", function(){
   SET.count = parseInt(this.value, 10);
@@ -906,14 +974,19 @@ function launch(mode){
     alert("Pre tento režim treba vybrať kategórie s vhodnými položkami (režim „Nájdi chybu“ potrebuje vety — napr. Zradné dvojice alebo Gramatické koncovky).");
     return;
   }
-  startRound(mode, pickRound(p, SET.count));
+  var side = null;
+  var allSoft = p.every(function(d){ return isSoft(d.a); });
+  var allHard = p.every(function(d){ return !isSoft(d.a); });
+  if (allSoft) side = "i"; else if (allHard) side = "y";
+  startRound(mode, pickRound(p, SET.count), side);
 }
-function startRound(mode, items){
+function startRound(mode, items, egg){
   if (!items.length) return;
-  R = { mode: mode, items: items, i: 0, ok: 0, bad: 0, mist: [], streak: 0, lives: 3, score: 0, done: false };
+  R = { mode: mode, items: items, i: 0, ok: 0, bad: 0, mist: [], streak: 0, lives: 3, score: 0, done: false, egg: egg || null };
   if (mode === "quiz"){ show("scr-quiz"); nextQuiz(); }
   else if (mode === "find"){ show("scr-find"); nextFind(); }
   else { show("scr-arcade"); startArcade(); }
+  if (R.egg) revealSpek(R.egg);
 }
 
 /* =============================================================
@@ -944,7 +1017,7 @@ function nextQuiz(){
   w.className = "q-word" + (d.t === "s" ? " sent" : "");
   renderBlank(w, d, "slot");
   el("qHint").innerHTML = "";
-  el("qStreak").textContent = R.streak >= 2 ? "🔥 " + R.streak : "";
+  el("qStreak").textContent = (R.egg ? "🕵️ " : "") + (R.streak >= 2 ? "🔥 " + R.streak : "");
   el("qProg").style.width = (R.i / R.items.length * 100) + "%";
 }
 function answerQuiz(soft){
@@ -958,7 +1031,7 @@ function answerQuiz(soft){
   markAnswer(d.id, ok);
   var hint = el("qHint");
   if (ok){
-    R.ok++; R.streak++;
+    R.ok++; R.streak++; achStreak();
     sndGood(); confetti(10);
     hint.innerHTML = "<b>" + fullOf(d) + "</b> — " + d.e;
     if (R.streak === 5 || R.streak === 10 || R.streak === 15 || R.streak === 20){ sndFanfare(); confetti(40); }
@@ -992,7 +1065,7 @@ function updHud(){
   for (var i = 0; i < 3; i++) s += (i < R.lives) ? "❤️" : "🖤";
   el("aLives").textContent = s;
   el("aScore").textContent = R.score;
-  el("aStreak").textContent = R.streak >= 2 ? "🔥 " + R.streak : "";
+  el("aStreak").textContent = (R.egg ? "🕵️ " : "") + (R.streak >= 2 ? "🔥 " + R.streak : "");
 }
 function nextArcade(){
   if (!R || R.mode !== "arcade") return;
@@ -1024,7 +1097,7 @@ function arcAnswer(soft){
   var slot = el("aslot");
   if (slot){ slot.textContent = chosenChar(d, soft); slot.classList.add("filled", ok ? "good" : "bad"); }
   if (ok){
-    R.ok++; R.score++; R.streak++;
+    R.ok++; R.score++; R.streak++; achStreak();
     if (R.ok % 3 === 0) A.dur = Math.max(3500, A.dur - 350);
     sndGood(); confetti(8); updHud();
     var fb = el("arcFb");
@@ -1065,7 +1138,7 @@ function nextFind(){
   var d = R.items[R.i];
   R.done = false;
   el("fNext").style.display = "none";
-  el("fStreak").textContent = R.streak >= 2 ? "🔥 " + R.streak : "";
+  el("fStreak").textContent = (R.egg ? "🕵️ " : "") + (R.streak >= 2 ? "🔥 " + R.streak : "");
   el("fProg").style.width = (R.i / R.items.length * 100) + "%";
   var full = fullOf(d);
   var blank = d.x.indexOf("_");
@@ -1094,7 +1167,7 @@ function findTap(ev){
   var ok = parseInt(sp.getAttribute("data-pos"), 10) === R.blank;
   markAnswer(d.id, ok);
   if (ok){
-    R.ok++; R.streak++;
+    R.ok++; R.streak++; achStreak();
     sp.textContent = d.a; sp.classList.add("hit-good");
     sndGood(); confetti(10);
     el("fHint").innerHTML = "<b>" + fullOf(d) + "</b> — " + d.e;
@@ -1146,6 +1219,7 @@ function endRound(){
   }
   el("rOnlyBad").style.display = R.mist.length ? "block" : "none";
   if (pct >= 90 && total > 0){ sndFanfare(); confetti(60); }
+  if (!R.egg && total === R.items.length && total >= 15 && R.bad === 0) unlock("perf");
   show("scr-results");
 }
 el("rAgain").addEventListener("click", function(){ launch(R.mode); });
@@ -1199,6 +1273,24 @@ function renderStats(){
       body.appendChild(p);
     });
   }
+  var th = document.createElement("h4");
+  th.textContent = "🏆 Trofeje";
+  th.style.margin = "14px 0 4px";
+  body.appendChild(th);
+  ACH.forEach(function(a){
+    var un = SET.ach && SET.ach[a.id];
+    var p = document.createElement("div"); p.className = "prob";
+    if (un){
+      p.innerHTML = "<span>" + a.ic + " " + a.n + "</span><small>" + a.d + "</small>";
+    } else if (a.secret){
+      p.innerHTML = "<span>🔒 ???</span><small>tajomstvo — objav ho pri hraní</small>";
+      p.style.opacity = ".6";
+    } else {
+      p.innerHTML = "<span>🔒 " + a.n + "</span><small>" + a.d + "</small>";
+      p.style.opacity = ".6";
+    }
+    body.appendChild(p);
+  });
   if (!tot){
     var e0 = document.createElement("div"); e0.className = "mist";
     e0.textContent = "Zatiaľ tu nič nie je — zahraj si prvé kolo a štatistiky sa objavia.";
@@ -1211,7 +1303,7 @@ el("btnProblem").addEventListener("click", function(){
   startRound("quiz", items.slice(0, Math.max(10, Math.min(items.length, SET.count))));
 });
 el("btnExport").addEventListener("click", function(){
-  var data = { app: "pravopisny-trener", ver: "3.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
+  var data = { app: "pravopisny-trener", ver: "4.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
   var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1227,7 +1319,16 @@ el("impFile").addEventListener("change", function(){
     try {
       var obj = JSON.parse(rd.result);
       if (obj && obj.stats){ STATS = obj.stats; saveStats(); }
-      if (obj && obj.settings){ SET = obj.settings; saveSet(); }
+      if (obj && obj.settings){
+        SET = obj.settings;
+        if (!SET.cats || !SET.cats.length) SET.cats = ALL_CATS.slice();
+        if (typeof SET.count !== "number") SET.count = 15;
+        if (typeof SET.sound !== "boolean") SET.sound = true;
+        if (!SET.ach) SET.ach = {};
+        if (typeof SET.night !== "boolean") SET.night = false;
+        if (typeof SET.owlTaps !== "number") SET.owlTaps = 0;
+        saveSet(); applyNight();
+      }
       renderStats(); refreshHome();
       alert("Import hotový.");
     } catch (e){ alert("Súbor sa nepodarilo načítať — nie je to platný export."); }
@@ -1239,6 +1340,87 @@ el("btnReset").addEventListener("click", function(){
   if (confirm("Naozaj vymazať všetky štatistiky? Toto sa nedá vrátiť späť.")){
     STATS = {}; saveStats(); renderStats();
   }
+});
+
+/* =============================================================
+   ACHIEVEMENTY, EASTER EGGY, NOČNÝ ZOŠIT
+   ============================================================= */
+var ACH = [
+  { id:"spekY", ic:"🕵️", n:"Ypsilonový špekulant", d:"Našiel si výber kategórií, kde je každá odpoveď tvrdé y.", secret:true },
+  { id:"spekI", ic:"🪶", n:"Íčkový špekulant", d:"Našiel si výber kategórií, kde je každá odpoveď mäkké i.", secret:true },
+  { id:"st10", ic:"🔥", n:"Séria 10", d:"10 správnych odpovedí v rade.", secret:false },
+  { id:"st20", ic:"🚀", n:"Séria 20", d:"20 správnych odpovedí v rade.", secret:false },
+  { id:"perf", ic:"💯", n:"Perfektné kolo", d:"Celé kolo (aspoň 15 slov) bez jedinej chyby.", secret:false },
+  { id:"owl", ic:"🦉", n:"Sovia reč", d:"25 klepnutí na sovu — už ti rozumie.", secret:true }
+];
+var TQ = [], TBUSY = false;
+function toast(html, cls, dur, fx){
+  TQ.push({ h: html, c: cls, d: dur, f: fx });
+  pumpToast();
+}
+function pumpToast(){
+  if (TBUSY || !TQ.length) return;
+  TBUSY = true;
+  var t = TQ.shift();
+  var d = document.createElement("div");
+  d.className = "toast " + (t.c || "");
+  d.innerHTML = t.h;
+  document.body.appendChild(d);
+  if (t.f === "ach"){ sndFanfare(); confetti(50); }
+  if (t.f === "owl"){ sndHoot(); }
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ d.classList.add("onx"); }); });
+  var closed = false;
+  function close(){
+    if (closed) return;
+    closed = true;
+    d.classList.remove("onx");
+    setTimeout(function(){ d.remove(); TBUSY = false; pumpToast(); }, 380);
+  }
+  d.addEventListener("click", close);
+  setTimeout(close, t.d || 4000);
+}
+function unlock(id){
+  if (!SET.ach) SET.ach = {};
+  if (SET.ach[id]) return false;
+  SET.ach[id] = Date.now();
+  saveSet();
+  var a = null;
+  for (var i = 0; i < ACH.length; i++) if (ACH[i].id === id) a = ACH[i];
+  if (a) toast('<div class="t1">🏆 Achievement odomknutý</div><div class="t2">' + a.ic + " " + a.n + '</div><div class="t3">' + a.d + "</div>", "ach", 4200, "ach");
+  return true;
+}
+function achStreak(){
+  if (!R || R.egg) return;
+  if (R.streak === 10) unlock("st10");
+  if (R.streak === 20) unlock("st20");
+}
+function applyNight(){ document.body.classList.toggle("night", !!SET.night); }
+function revealSpek(side){
+  var id = side === "i" ? "spekI" : "spekY";
+  var hadNight = !!(SET.ach.spekY || SET.ach.spekI);
+  var isNew = unlock(id);
+  if (!isNew) return;
+  if (!hadNight){ SET.night = true; saveSet(); applyNight(); }
+  var tip;
+  if (side === "y"){
+    tip = "Húú! Samé ypsilony — ty špekulant! 🕵️ " + (hadNight ? "" : "Odomkol si 🌙 Nočný zošit, prepínač nájdeš v menu. ") + "A skús pridať kategóriu „Mäkké i po obojakých“ — tam ťa dostanem. 😏";
+  } else {
+    tip = "Húú! Samé mäkké i — pravidlá si prekukol! 🪶 " + (hadNight ? "" : "Odomkol si 🌙 Nočný zošit, prepínač nájdeš v menu. ") + "A vraj existuje aj ypsilonový trik… 🕵️";
+  }
+  toast("🦉 " + tip, "owlmsg", 9000, "owl");
+}
+el("btnNight").addEventListener("click", function(){
+  if (this.disabled) return;
+  SET.night = !SET.night;
+  saveSet(); applyNight(); refreshHome();
+});
+el("owlBtn").addEventListener("click", function(){
+  var o = this;
+  o.classList.remove("hop"); void o.offsetWidth; o.classList.add("hop");
+  SET.owlTaps = (SET.owlTaps || 0) + 1;
+  saveSet();
+  if (SET.owlTaps % 5 === 0){ sndHoot(); confetti(14, ["🦉","🪶","✨"]); }
+  if (SET.owlTaps === 25) unlock("owl");
 });
 
 /* =============================================================
@@ -1322,7 +1504,8 @@ document.addEventListener("keydown", function(ev){
 /* štart */
 renderCats();
 refreshHome();
+applyNight();
 </script>
 </body>
 </html>
-<!-- v3.0 (2026-07-18) — koniec súboru -->
+<!-- v4.0 (2026-07-18) — koniec súboru -->
