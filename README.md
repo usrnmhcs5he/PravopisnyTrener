@@ -10,6 +10,7 @@ Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závis
 
 | Verzia | Dátum | Zmeny |
 |--------|------------|-------|
+| v4.0 | 2026-07-18 | Easter eggy a trofeje: detekcia „špekulantských" výberov (čisto-Y aj čisto-I) s achievementmi, trvalé odomknutie témy 🌙 Nočný zošit, ochrana váh v špekulantských kolách, trofeje Séria 10/20 a Perfektné kolo, interaktívna sova, trofejná polička v Štatistikách. |
 | v3.0 | 2026-07-18 | Nová obrazovka „📖 Vysvetlivky": slovník všetkých 245 položiek zoskupený podľa kategórií, vyhľadávanie bez ohľadu na diakritiku a veľkosť písmen, farebne zvýraznené i/y (tyrkysové mäkké, oranžové tvrdé) + pravidlo pri každej položke. |
 | v2.0 | 2026-07-18 | Tlačidlá odpovede výslovne ukazujú aj dlhé varianty: „i (í)" a „y (ý)" s popisom „mäkké/tvrdé — aj dlhé". Viditeľné označenie „verzia 2" na domovskej obrazovke. Verzia v exporte štatistík zvýšená na 2.0. Slovník bez zmeny. |
 | v1.0 | 2026-07-18 | Prvé vydanie: 3 režimy, 245 položiek, adaptívny výber, štatistiky, export/import, zvuky, konfety. |
@@ -87,6 +88,39 @@ slov má minimum 10 a maximum podľa aktuálneho výberu.
 
 ---
 
+## 🏆 Trofeje a easter eggy (pozor — spoilery pre deti)
+
+Aplikácia odmeňuje objavovanie. Trofejná polička je v Štatistikách; tajné
+trofeje sa tam do odomknutia zobrazujú ako „🔒 ???".
+
+| Trofej | Ako sa získa |
+|--------|--------------|
+| 🕵️ Ypsilonový špekulant *(tajná)* | Spustiť kolo s výberom kategórií, kde je každá odpoveď tvrdé y (napr. len vybrané slová, alebo vybrané + Tvrdé spoluhlásky). |
+| 🪶 Íčkový špekulant *(tajná)* | Zrkadlový trik: výber, kde je všetko mäkké i (kombinácie Mäkké spoluhlásky / di-ti-ni-li / Mäkké i po obojakých). |
+| 🔥 Séria 10 | 10 správnych odpovedí v rade. |
+| 🚀 Séria 20 | 20 správnych odpovedí v rade. |
+| 💯 Perfektné kolo | Celé kolo (aspoň 15 slov) bez jedinej chyby. |
+| 🦉 Sovia reč *(tajná)* | 25 klepnutí na sovu na domovskej obrazovke (húka pri každom 5.). |
+
+Mechanika okolo špekulantských kôl:
+
+- Detekcia je generická — kontroluje sa, či **celá zásoba kola** patrí jednej
+  strane (y/ý alebo i/í), nie konkrétny zoznam kategórií. Prežije teda aj
+  budúce pridávanie kategórií.
+- Prvý špekulantský objav (ktorýkoľvek z dvoch) natrvalo **odomkne tému
+  🌙 Nočný zošit**. Tlačidlo je v menu viditeľné od začiatku, ale zosivené so
+  zámkom; po odomknutí sa dá téma ľubovoľne zapínať a vypínať a stav sa
+  pamätá. Počas objavného kola sa téma sama zapne a sova v bubline poradí
+  „protiúder" (pridať kategóriu s opačnou stranou).
+- Ochrana adaptívneho algoritmu: v špekulantskom kole (v hre označené 🕵️)
+  sa pri správnych odpovediach **váhy slov neznižujú** — nedá sa tak
+  „vyfarmiť", aby appka prestala ukazovať nenaučené slová. Chyby sa počítajú
+  plne. Trofeje Séria a Perfektné kolo sa v špekulantských kolách
+  nezapočítavajú.
+- Trofeje a stav témy sú súčasťou exportu/importu nastavení.
+
+---
+
 ## Ukladanie dát
 
 - Štatistiky: kľúč `pt_stats_v1`, nastavenia: `pt_settings_v1` v **localStorage**
@@ -150,4 +184,4 @@ Slovník a pravidlá boli pri tvorbe overené proti verejným školským zdrojom
 - Nevykonáva žiadne sieťové volania; všetko (zvuky, grafika, dáta) je vnorené.
 - Jediné zapisované dáta sú lokálne štatistiky hráča v prehliadači.
 
-<!-- v3.0 (2026-07-18) — koniec súboru -->
+<!-- v4.0 (2026-07-18) — koniec súboru -->
