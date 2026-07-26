@@ -5,6 +5,20 @@
   Interaktívna doplňovačka na precvičovanie slovenského pravopisu
 =====================================================================
   VERSION HISTORY
+  v5.0 (2026-07-26)
+    - Achievement a sovie toasty zostavaju zobrazene 3x dlhsie
+      (achievement ~12,6 s, sovia bublina ~27 s; klepnutim sa
+      daju zavriet skor).
+    - Nova ziarovka 💡 v hornej liste vsetkych troch hernych
+      rezimov: otvori prehlad "Preco i/y?" s poslednymi
+      zodpovedanymi slovami (plny tvar + pravidlo) a s logom
+      poslednych sprav (achievementy, sovie tipy). V arkade sa
+      pocas otvorenej ziarovky padanie slova poctivo pozastavi.
+    - Trvaly mini-navod na domovskej obrazovke (easter eggy,
+      Vysvetlivky, ziarovka).
+    - Rezim Najdi chybu: vyraznejsie medzery medzi slovami,
+      aby sa hranice slov nezlievali.
+    - Verzia exportu statistik zvysena na 5.0.
   v4.0 (2026-07-18)
     - Easter eggy a trofeje: genericka detekcia "spekulantskych"
       vyberov (zasoba kola len y/y alebo len i/i) -> achievementy
@@ -277,6 +291,29 @@ input[type=range]{flex:1;min-width:160px;accent-color:var(--soft);height:34px;}
 .hl-y{color:var(--hard-deep);font-weight:800;}
 .home-foot .chip-btn{font-size:15px;padding:10px 8px;}
 
+/* ---------- mini-navod na domovskej obrazovke ---------- */
+.guide{margin:2px 0 16px;padding:12px 14px;background:#FBF7EA;border-radius:12px;
+  font-size:14.5px;line-height:1.55;color:var(--ink);}
+body.night .guide{background:#2C2C3A;}
+
+/* ---------- žiarovka: prehľad vysvetlení a správ ---------- */
+.ov{position:fixed;inset:0;background:rgba(20,20,28,.45);display:none;z-index:150;
+  padding:18px 12px;overflow:auto;}
+.ov.onx{display:block;}
+.ov-card{max-width:640px;margin:0 auto;background:var(--paper);border-radius:var(--card-r);
+  box-shadow:var(--shadow);padding:18px;}
+.ov-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;}
+.ov-close{border:none;background:#EDE6D2;border-radius:10px;font-size:15px;font-weight:800;
+  padding:9px 13px;cursor:pointer;font-family:inherit;color:var(--ink);}
+body.night .ov-close{background:#31313F;color:#C9C9D6;}
+#bulbBody .t1{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);}
+#bulbBody .t2{font-size:17px;font-weight:800;}
+#bulbBody .t3{font-size:14px;color:var(--ink-soft);}
+.dict-word.sm{font-size:17px;}
+
+/* ---------- medzera medzi slovami v režime Nájdi chybu ---------- */
+.sp{display:inline-block;width:.55em;}
+
 /* ---------- achievement toasty a sovie bubliny ---------- */
 .toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-140%);
   background:linear-gradient(135deg,#FFD34D,#F0A72B);color:#3A2B00;border-radius:16px;
@@ -363,6 +400,12 @@ body.night .iy.hit-bad{background:#452726;}
         </button>
       </div>
 
+      <div class="guide">
+        🥚 V hre sú <b>skryté prekvapenia</b> — objavuj a skúšaj rôzne kombinácie kategórií.<br>
+        📖 Všetky slová a pravidlá nájdeš vo <b>Vysvetlivkách</b>.<br>
+        💡 Počas hry klepni na <b>žiarovku</b> — zopakuje, prečo je v slove i alebo y, a nájdeš tam aj posledné správy.
+      </div>
+
       <div class="set-block">
         <h4>Koľko slov v kole?</h4>
         <div class="count-row">
@@ -389,7 +432,7 @@ body.night .iy.hit-bad{background:#452726;}
         <button class="chip-btn" id="btnNight" disabled>🔒 Nočný zošit</button>
         <button class="chip-btn" id="btnSound">🔊 Zvuk</button>
       </div>
-      <div class="verline">verzia 4</div>
+      <div class="verline">verzia 5</div>
     </div>
   </section>
 
@@ -397,6 +440,7 @@ body.night .iy.hit-bad{background:#452726;}
   <section id="scr-quiz" class="screen">
     <div class="topbar">
       <button class="chip-btn" data-home>← Domov</button>
+      <button class="chip-btn" id="qBulb" title="Prečo i/y? Vysvetlenia a správy">💡</button>
       <div class="spacer"></div>
       <div class="streak" id="qStreak"></div>
     </div>
@@ -417,6 +461,7 @@ body.night .iy.hit-bad{background:#452726;}
   <section id="scr-arcade" class="screen">
     <div class="topbar">
       <button class="chip-btn" data-home>← Domov</button>
+      <button class="chip-btn" id="aBulb" title="Prečo i/y? Vysvetlenia a správy">💡</button>
       <div class="spacer"></div>
       <div class="streak" id="aStreak"></div>
     </div>
@@ -435,6 +480,7 @@ body.night .iy.hit-bad{background:#452726;}
   <section id="scr-find" class="screen">
     <div class="topbar">
       <button class="chip-btn" data-home>← Domov</button>
+      <button class="chip-btn" id="fBulb" title="Prečo i/y? Vysvetlenia a správy">💡</button>
       <div class="spacer"></div>
       <div class="streak" id="fStreak"></div>
     </div>
@@ -494,6 +540,17 @@ body.night .iy.hit-bad{background:#452726;}
       <div id="dictBody"></div>
     </div>
   </section>
+
+  <!-- ================= ŽIAROVKA: PREČO I/Y? ================= -->
+  <div class="ov" id="bulbOv">
+    <div class="ov-card">
+      <div class="ov-head">
+        <h1 class="title" style="font-size:22px;margin:0;">💡 Prečo i/y?</h1>
+        <button class="ov-close" id="bulbClose">✕ Zavrieť</button>
+      </div>
+      <div id="bulbBody"></div>
+    </div>
+  </div>
 
 </div>
 
@@ -865,6 +922,9 @@ function shuffle(arr){
   return arr;
 }
 
+var BYID = {};
+DICT.forEach(function(d){ BYID[d.id] = d; });
+
 /* Váhový algoritmus: nové slovo 1.3, chyba ×3 (max 30), správne ×0.6 (min 0.35). */
 var W_NEW = 1.3, W_BAD = 3, W_MAX = 30, W_OK = 0.6, W_MIN = 0.35;
 function weightOf(id){ var s = STATS[id]; return s ? s.w : W_NEW; }
@@ -873,6 +933,7 @@ function markAnswer(id, ok){
   s.s++; s.last = Date.now();
   if (ok){ s.ok++; if (!(R && R.egg)) s.w = Math.max(W_MIN, s.w * W_OK); }
   else   { s.bad++; s.w = Math.min(W_MAX, s.w * W_BAD); }
+  if (R && R.hist){ R.hist.unshift({ id: id, ok: ok }); if (R.hist.length > 60) R.hist.pop(); }
   saveStats();
 }
 function poolFor(cats){ return DICT.filter(function(d){ return cats.indexOf(d.c) >= 0; }); }
@@ -982,7 +1043,7 @@ function launch(mode){
 }
 function startRound(mode, items, egg){
   if (!items.length) return;
-  R = { mode: mode, items: items, i: 0, ok: 0, bad: 0, mist: [], streak: 0, lives: 3, score: 0, done: false, egg: egg || null };
+  R = { mode: mode, items: items, i: 0, ok: 0, bad: 0, mist: [], streak: 0, lives: 3, score: 0, done: false, egg: egg || null, hist: [] };
   if (mode === "quiz"){ show("scr-quiz"); nextQuiz(); }
   else if (mode === "find"){ show("scr-find"); nextFind(); }
   else { show("scr-arcade"); startArcade(); }
@@ -1069,6 +1130,7 @@ function updHud(){
 }
 function nextArcade(){
   if (!R || R.mode !== "arcade") return;
+  if (A && A.hold){ A.waiting = true; return; }
   if (R.i >= R.items.length || R.lives <= 0) return endRound();
   var d = R.items[R.i];
   renderBlank(el("faller"), d, "aslot");
@@ -1152,6 +1214,11 @@ function nextFind(){
       sp.setAttribute("data-pos", i);
       sp.addEventListener("click", findTap);
       box.appendChild(sp);
+    } else if (ch === " "){
+      var sps = document.createElement("span");
+      sps.className = "sp";
+      sps.textContent = "\u00A0";
+      box.appendChild(sps);
     } else {
       box.appendChild(document.createTextNode(ch));
     }
@@ -1303,7 +1370,7 @@ el("btnProblem").addEventListener("click", function(){
   startRound("quiz", items.slice(0, Math.max(10, Math.min(items.length, SET.count))));
 });
 el("btnExport").addEventListener("click", function(){
-  var data = { app: "pravopisny-trener", ver: "4.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
+  var data = { app: "pravopisny-trener", ver: "5.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
   var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1354,8 +1421,11 @@ var ACH = [
   { id:"owl", ic:"🦉", n:"Sovia reč", d:"25 klepnutí na sovu — už ti rozumie.", secret:true }
 ];
 var TQ = [], TBUSY = false;
+var MSG_LOG = [];
 function toast(html, cls, dur, fx){
   TQ.push({ h: html, c: cls, d: dur, f: fx });
+  MSG_LOG.unshift({ h: html, ts: Date.now() });
+  if (MSG_LOG.length > 12) MSG_LOG.pop();
   pumpToast();
 }
 function pumpToast(){
@@ -1377,7 +1447,7 @@ function pumpToast(){
     setTimeout(function(){ d.remove(); TBUSY = false; pumpToast(); }, 380);
   }
   d.addEventListener("click", close);
-  setTimeout(close, t.d || 4000);
+  setTimeout(close, t.d || 12000);
 }
 function unlock(id){
   if (!SET.ach) SET.ach = {};
@@ -1386,7 +1456,7 @@ function unlock(id){
   saveSet();
   var a = null;
   for (var i = 0; i < ACH.length; i++) if (ACH[i].id === id) a = ACH[i];
-  if (a) toast('<div class="t1">🏆 Achievement odomknutý</div><div class="t2">' + a.ic + " " + a.n + '</div><div class="t3">' + a.d + "</div>", "ach", 4200, "ach");
+  if (a) toast('<div class="t1">🏆 Achievement odomknutý</div><div class="t2">' + a.ic + " " + a.n + '</div><div class="t3">' + a.d + "</div>", "ach", 12600, "ach");
   return true;
 }
 function achStreak(){
@@ -1407,8 +1477,89 @@ function revealSpek(side){
   } else {
     tip = "Húú! Samé mäkké i — pravidlá si prekukol! 🪶 " + (hadNight ? "" : "Odomkol si 🌙 Nočný zošit, prepínač nájdeš v menu. ") + "A vraj existuje aj ypsilonový trik… 🕵️";
   }
-  toast("🦉 " + tip, "owlmsg", 9000, "owl");
+  toast("🦉 " + tip, "owlmsg", 27000, "owl");
 }
+function bulbOpen(){ return el("bulbOv").classList.contains("onx"); }
+function openBulb(){
+  renderBulb();
+  el("bulbOv").classList.add("onx");
+  if (R && R.mode === "arcade" && A){
+    if (A.active){
+      A.pausedAt = performance.now();
+      A.active = false; A.paused = true;
+      cancelAnimationFrame(A.raf);
+    }
+    A.hold = true;
+  }
+}
+function closeBulb(){
+  el("bulbOv").classList.remove("onx");
+  if (R && R.mode === "arcade" && A){
+    A.hold = false;
+    if (A.paused){
+      A.paused = false;
+      A.start = performance.now() - (A.pausedAt - A.start);
+      A.active = true;
+      A.raf = requestAnimationFrame(fallStep);
+    } else if (A.waiting){
+      A.waiting = false;
+      nextArcade();
+    }
+  }
+}
+function renderBulb(){
+  var body = el("bulbBody"); body.innerHTML = "";
+  var h1 = document.createElement("div"); h1.className = "dict-cat";
+  h1.textContent = "🔁 Posledné slová v tomto kole";
+  body.appendChild(h1);
+  if (R && R.hist && R.hist.length){
+    R.hist.slice(0, 12).forEach(function(hrec){
+      var d = BYID[hrec.id]; if (!d) return;
+      var it = document.createElement("div"); it.className = "dict-item";
+      var title = document.createElement("div"); title.className = "dict-word sm";
+      var mark = hrec.ok ? "✅ " : "❌ ";
+      if (d.t === "w"){
+        title.innerHTML = mark + (d.m ? d.m + " " : "") + hlFull(d);
+      } else {
+        title.innerHTML = mark + (d.m ? d.m + " " : "") + dispOf(d);
+      }
+      it.appendChild(title);
+      if (d.t === "s"){
+        var sn = document.createElement("div"); sn.className = "dict-sent";
+        sn.innerHTML = hlFull(d);
+        it.appendChild(sn);
+      }
+      var ex = document.createElement("div"); ex.className = "dict-expl";
+      ex.textContent = d.e;
+      it.appendChild(ex);
+      body.appendChild(it);
+    });
+  } else {
+    var e1 = document.createElement("div"); e1.className = "dict-expl";
+    e1.textContent = "Zatiaľ nič — odpovedz na prvé slovo a objaví sa tu aj s pravidlom.";
+    body.appendChild(e1);
+  }
+  var h2 = document.createElement("div"); h2.className = "dict-cat";
+  h2.textContent = "📬 Posledné správy";
+  body.appendChild(h2);
+  if (MSG_LOG.length){
+    MSG_LOG.forEach(function(msg){
+      var it = document.createElement("div"); it.className = "dict-item";
+      it.innerHTML = msg.h;
+      body.appendChild(it);
+    });
+  } else {
+    var e2 = document.createElement("div"); e2.className = "dict-expl";
+    e2.textContent = "Zatiaľ žiadne správy. Achievementy a sovie odkazy sa zobrazia tu.";
+    body.appendChild(e2);
+  }
+}
+el("qBulb").addEventListener("click", openBulb);
+el("aBulb").addEventListener("click", openBulb);
+el("fBulb").addEventListener("click", openBulb);
+el("bulbClose").addEventListener("click", closeBulb);
+el("bulbOv").addEventListener("click", function(ev){ if (ev.target === this) closeBulb(); });
+
 el("btnNight").addEventListener("click", function(){
   if (this.disabled) return;
   SET.night = !SET.night;
@@ -1489,6 +1640,10 @@ el("dictSearch").addEventListener("input", function(){ renderDict(this.value.tri
    ============================================================= */
 document.addEventListener("keydown", function(ev){
   var k = ev.key ? ev.key.toLowerCase() : "";
+  if (bulbOpen()){
+    if (k === "escape" || k === "enter"){ ev.preventDefault(); closeBulb(); }
+    return;
+  }
   if (scrOn("scr-quiz")){
     if (k === "i") answerQuiz(true);
     else if (k === "y") answerQuiz(false);
@@ -1508,4 +1663,4 @@ applyNight();
 </script>
 </body>
 </html>
-<!-- v4.0 (2026-07-18) — koniec súboru -->
+<!-- v5.0 (2026-07-26) — koniec súboru -->
