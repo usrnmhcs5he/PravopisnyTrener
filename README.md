@@ -1,62 +1,75 @@
-# Pravopisný tréner
+# Pravopisný tréner — mäkké i / tvrdé y
 
-**Pravopisný tréner** je interaktívna hra na precvičovanie slovenského pravopisu
-i/í a y/ý pre deti. Celá aplikácia je jediný súbor `pravopisny-trener.html` —
-bez inštalácie, bez závislostí, bez sieťových volaní. Beží offline priamo z disku.
+Interaktívna hra na precvičovanie slovenského pravopisu i/í a y/ý pre deti.
+Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závislosti,
+žiadne sieťové volania. Beží offline priamo z disku.
 
-## Hlavné funkcie
+---
 
-- **3 herné režimy** — Doplňovačka, Padajúce slová a Nájdi chybu.
-- **245 položiek** v 14 kategóriách, ktoré sa dajú ľubovoľne kombinovať.
-- **Adaptívny výber** — slová, v ktorých dieťa chybuje, sa vracajú častejšie.
-- **📖 Vysvetlivky** — slovník všetkých položiek s pravidlom a vyhľadávaním
-  bez ohľadu na diakritiku.
-- **💡 Žiarovka** — prehľad „Prečo i/y?" s poslednými slovami a správami.
-- **🏆 Trofeje a easter eggy**, štatistiky, zvuky, konfety a téma 🌙 Nočný zošit.
-- **Export/import** pokroku do JSON (záloha, prenos medzi zariadeniami).
+## Verzie
 
-## Požiadavky
+| Verzia | Dátum | Zmeny |
+|--------|------------|-------|
+| v6.0 | 2026-08-04 | Príprava na webové nasadenie: master očistený od inline štýlov (funguje pod prísnym CSP bez `unsafe-inline`), nový build skript `build_web.py` generuje webovú distribúciu (oddelené súbory, PWA, podmienky použitia, bezpečnostné hlavičky pre Cloudflare Pages, ikony) a jednosúborovú offline verziu bez komentárov. Žiadne funkčné zmeny hry. |
+| v5.0 | 2026-07-26 | Achievement a sovie oznámenia zostávajú zobrazené 3× dlhšie (klepnutím sa zavrú skôr). Nová žiarovka 💡 v hornej lište všetkých režimov — prehľad „Prečo i/y?" s poslednými zodpovedanými slovami (plný tvar + pravidlo) a logom posledných správ; v arkáde sa počas otvorenej žiarovky padanie poctivo pozastaví. Trvalý mini-návod na domovskej obrazovke. Väčšie medzery medzi slovami v režime Nájdi chybu. |
+| v4.0 | 2026-07-18 | Easter eggy a trofeje: detekcia „špekulantských" výberov (čisto-Y aj čisto-I) s achievementmi, trvalé odomknutie témy 🌙 Nočný zošit, ochrana váh v špekulantských kolách, trofeje Séria 10/20 a Perfektné kolo, interaktívna sova, trofejná polička v Štatistikách. |
+| v3.0 | 2026-07-18 | Nová obrazovka „📖 Vysvetlivky": slovník všetkých 245 položiek zoskupený podľa kategórií, vyhľadávanie bez ohľadu na diakritiku a veľkosť písmen, farebne zvýraznené i/y (tyrkysové mäkké, oranžové tvrdé) + pravidlo pri každej položke. |
+| v2.0 | 2026-07-18 | Tlačidlá odpovede výslovne ukazujú aj dlhé varianty: „i (í)" a „y (ý)" s popisom „mäkké/tvrdé — aj dlhé". Viditeľné označenie „verzia 2" na domovskej obrazovke. Verzia v exporte štatistík zvýšená na 2.0. Slovník bez zmeny. |
+| v1.0 | 2026-07-18 | Prvé vydanie: 3 režimy, 245 položiek, adaptívny výber, štatistiky, export/import, zvuky, konfety. |
 
-Ľubovoľný moderný prehliadač (Safari, Chrome, Firefox, Edge), aj na iPade.
-Nič sa neinštaluje.
+---
 
 ## Spustenie
 
 1. Stiahni `pravopisny-trener.html`.
-2. Otvor ho dvojklikom v prehliadači.
-3. Hotovo — aplikácia funguje úplne offline.
+2. Otvor ho dvojklikom v ľubovoľnom modernom prehliadači (Safari, Chrome,
+   Firefox, Edge) — aj na iPade.
+3. Hotovo. Aplikácia funguje úplne offline.
 
-> **Poznámka:** v náhľade artefaktu v Claude nefunguje trvalé ukladanie
-> (localStorage) ani dialógové okná. Plná funkčnosť je až po lokálnom otvorení.
+> **Poznámka k náhľadu v Claude:** v náhľade artefaktu nefunguje trvalé
+> ukladanie (localStorage) ani dialógové okná. Plná funkčnosť je až po
+> stiahnutí a otvorení súboru lokálne.
 
-Ovládanie klávesnicou: **i** / **y** = odpoveď, **Enter** = ďalej.
+---
 
 ## Herné režimy
 
 | Režim | Popis | Zásoba |
 |-------|-------|--------|
-| 📝 **Doplňovačka** | Doplň i/y do slova alebo vety; pri chybe sa ukáže správny tvar + pravidlo a pokračuje sa po potvrdení. | všetkých 245 položiek |
-| 🚀 **Padajúce slová** | Slovo padá z neba, treba stihnúť odpovedať. 3 životy, rýchlosť rastie (8 s → min. 3,5 s; −0,35 s za každé 3 správne). | 186 slov (bez viet) |
-| 🔍 **Nájdi chybu** | Vo vete je jedno i/y naschvál vymenené — dieťa naň klepne. | 56 viet (s ≥ 2 výskytmi i/y) |
+| 📝 **Doplňovačka** | Klasika: doplň i/y do slova alebo vety, dĺžeň sa doplní automaticky. Pri chybe sa zobrazí správny tvar + pravidlo a pokračuje sa až po potvrdení (dieťa si vysvetlenie prečíta). | všetkých 245 položiek |
+| 🚀 **Padajúce slová** | Slovo padá z neba; treba stihnúť odpovedať, kým dopadne. 3 životy, rýchlosť sa postupne zvyšuje (8 s → min. 3,5 s; −0,35 s za každé 3 správne). | 186 slov (bez viet) |
+| 🔍 **Nájdi chybu** | Vo vete je jedno i/y naschvál vymenené. Dieťa naň klepne. | 56 viet (vety s ≥ 2 výskytmi i/y) |
 
-Tlačidlo **i (í)** platí pre krátke aj dlhé í, tlačidlo **y (ý)** pre krátke aj
-dlhé ý — správnu dĺžku doplní aplikácia sama.
+Ovládanie klávesnicou: **i** / **y** = odpoveď, **Enter** = ďalej.
 
-### 📖 Vysvetlivky
+### 📖 Vysvetlivky (od v3.0)
 
-Slovník všetkých položiek zoskupený podľa kategórií. Písmeno je farebne
-zvýraznené (tyrkysové = mäkké i/í, oranžové = tvrdé y/ý) a pri každej položke je
-pravidlo. Vyhľadávanie ignoruje diakritiku aj veľkosť písmen („byk" nájde „býk").
+Tlačidlo v hlavnom menu otvorí slovník všetkých položiek zoskupený podľa
+kategórií. Pri každom slove či vete je farebne zvýraznené písmeno
+(tyrkysové = mäkké i/í, oranžové = tvrdé y/ý) a pravidlo, prečo sa tam píše.
+Vyhľadávanie funguje bez ohľadu na diakritiku a veľkosť písmen („byk" nájde
+„býk").
 
-### 💡 Žiarovka
+Tlačidlo **i (í)** platí pre krátke i aj dlhé í, tlačidlo **y (ý)** pre krátke
+y aj dlhé ý — správnu dĺžku doplní aplikácia sama. Slovník obsahuje všetky
+štyri varianty.
 
-Je v hornej lište každého režimu a otvorí „Prečo i/y?":
+### 💡 Žiarovka (od v5.0)
 
-- **Posledné slová v kole** — zodpovedané položiek (✅/❌), plný tvar a pravidlo.
-- **Posledné správy** — log achievementov a sovích odkazov z aktuálneho sedenia.
+V hornej lište každého režimu je žiarovka. Otvorí prehľad **„Prečo i/y?"**:
 
-V arkáde sa počas otvorenej žiarovky padanie pozastaví. Zatvorí sa cez ✕,
-klepnutie mimo karty, Enter alebo Escape; klávesy i/y vtedy neodpovedajú.
+- **Posledné slová v tomto kole** — zoznam už zodpovedaných položiek
+  (✅/❌, plný tvar s farebne zvýrazneným písmenom a pravidlo). Rieši situáciu,
+  keď správna odpoveď preskočí ďalej skôr, než si dieťa stihne prečítať
+  vysvetlenie.
+- **Posledné správy** — log achievementov a sovích odkazov z aktuálneho
+  sedenia, keby banner zmizol prirýchlo.
+
+V arkáde sa počas otvorenej žiarovky padanie slova pozastaví (vrátane čakania
+medzi slovami), takže sa nedá o nič prísť. Zatvorenie: ✕, klepnutie mimo
+kartu, Enter alebo Escape; počas otvorenej žiarovky klávesy i/y neodpovedajú.
+
+---
 
 ## Adaptívny výber slov
 
@@ -69,57 +82,130 @@ opakovania):
 | Po chybe | ×3 (strop **30**) |
 | Po správnej odpovedi | ×0,6 (dno **0,35**) |
 
-Zvládnuté slová sa objavujú zriedkavo, ale nikdy nezmiznú úplne.
+Slovo, v ktorom dieťa opakovane chybuje, sa tak vracia mnohonásobne častejšie;
+dobre zvládnuté slová sa objavujú zriedkavo, ale nikdy nezmiznú úplne.
 
-## Kategórie (spolu 245)
+---
+
+## Kategórie a počty (spolu 245)
 
 | Kategória | Počet | Poznámka |
 |-----------|------:|----------|
-| Vybrané po B / M / P / R / S / V / Z | 16/16/12/20/12/16/8 | podľa školského zoznamu; pri V aj vy-/vý- |
-| Tvrdé spoluhlásky → y | 24 | h, ch, k, g, d, t, n, l (lyže, mlyn) |
+| Vybrané po B / M / P / R / S / V / Z | 16/16/12/20/12/16/8 | podľa školského zoznamu; pri V aj predpona vy-/vý- |
+| Tvrdé spoluhlásky → y | 24 | h, ch, k, g, d, t, n, l (lyže, mlyn — L je tvrdá) |
 | Mäkké spoluhlásky → i | 15 | c, dz, j, č, dž, š, ž |
-| Mäkké di, ti, ni, li | 15 | d/t/n/l vyslovené mäkko → i |
+| Mäkké di, ti, ni, li | 15 | d/t/n/l vyslovené mäkko → i (divadlo, ticho, list) |
 | Mäkké i po obojakých | 15 | chytáky: obilie, misa, sila, zima… |
-| Zradné dvojice | 17 | byť/biť, my/mi, výr/vír, rým/Rím… |
-| Gramatické koncovky | 42 | pekní/pekný, chlapi/duby, oni/ony, -li v minulom čase… |
-| Cudzie slová a výnimky | 17 | fyzika, cyklista vs. kino, gitara, diktát… |
+| Zradné dvojice | 17 | byť/biť, dobyť/dobiť, my/mi, výr/vír, vyť/viť, bydlo/bidlo, víla/vyla, rým/Rím + sirup |
+| Gramatické koncovky | 42 | pekní/pekný, chlapi/duby/psy, oni/ony, sami/samy, radi/rady, siedmi/siedmy, -li v minulom čase, ulici/kosti/mamy… |
+| Cudzie slová a výnimky | 17 | fyzika, cyklista vs. kino, gitara, diktát; zvukomalebné; predpony od-/pred- |
 
-Posuvník počtu slov má minimum 10 a maximum podľa aktuálneho výberu.
+Kategórie sa dajú na domovskej obrazovke ľubovoľne kombinovať; posuvník počtu
+slov má minimum 10 a maximum podľa aktuálneho výberu.
 
-## 🏆 Trofeje a easter eggy
+---
 
-> Pozor — spoilery pre deti. Tajné trofeje sú v Štatistikách zobrazené ako „🔒 ???".
+## 🏆 Trofeje a easter eggy (pozor — spoilery pre deti)
+
+Aplikácia odmeňuje objavovanie. Trofejná polička je v Štatistikách; tajné
+trofeje sa tam do odomknutia zobrazujú ako „🔒 ???".
 
 | Trofej | Ako sa získa |
 |--------|--------------|
-| 🕵️ Ypsilonový špekulant *(tajná)* | Kolo, v ktorom je každá odpoveď tvrdé y. |
-| 🪶 Íčkový špekulant *(tajná)* | Zrkadlový trik: všetko mäkké i. |
-| 🔥 Séria 10 / 🚀 Séria 20 | 10 / 20 správnych odpovedí v rade. |
-| 💯 Perfektné kolo | Kolo (aspoň 15 slov) bez jedinej chyby. |
-| 🦉 Sovia reč *(tajná)* | 25 klepnutí na sovu na domovskej obrazovke. |
+| 🕵️ Ypsilonový špekulant *(tajná)* | Spustiť kolo s výberom kategórií, kde je každá odpoveď tvrdé y (napr. len vybrané slová, alebo vybrané + Tvrdé spoluhlásky). |
+| 🪶 Íčkový špekulant *(tajná)* | Zrkadlový trik: výber, kde je všetko mäkké i (kombinácie Mäkké spoluhlásky / di-ti-ni-li / Mäkké i po obojakých). |
+| 🔥 Séria 10 | 10 správnych odpovedí v rade. |
+| 🚀 Séria 20 | 20 správnych odpovedí v rade. |
+| 💯 Perfektné kolo | Celé kolo (aspoň 15 slov) bez jedinej chyby. |
+| 🦉 Sovia reč *(tajná)* | 25 klepnutí na sovu na domovskej obrazovke (húka pri každom 5.). |
 
-Špekulantské kolá:
+Mechanika okolo špekulantských kôl:
 
 - Detekcia je generická — kontroluje sa, či **celá zásoba kola** patrí jednej
-  strane (y/ý alebo i/í), nie konkrétny zoznam kategórií.
-- Prvý objav natrvalo **odomkne tému 🌙 Nočný zošit**.
-- Váhy slov sa pri správnych odpovediach v takom kole **neznižujú** (nedá sa
-  „vyfarmiť"); chyby sa počítajú plne. Trofeje Séria a Perfektné kolo sa v nich
+  strane (y/ý alebo i/í), nie konkrétny zoznam kategórií. Prežije teda aj
+  budúce pridávanie kategórií.
+- Prvý špekulantský objav (ktorýkoľvek z dvoch) natrvalo **odomkne tému
+  🌙 Nočný zošit**. Tlačidlo je v menu viditeľné od začiatku, ale zosivené so
+  zámkom; po odomknutí sa dá téma ľubovoľne zapínať a vypínať a stav sa
+  pamätá. Počas objavného kola sa téma sama zapne a sova v bubline poradí
+  „protiúder" (pridať kategóriu s opačnou stranou).
+- Ochrana adaptívneho algoritmu: v špekulantskom kole (v hre označené 🕵️)
+  sa pri správnych odpovediach **váhy slov neznižujú** — nedá sa tak
+  „vyfarmiť", aby appka prestala ukazovať nenaučené slová. Chyby sa počítajú
+  plne. Trofeje Séria a Perfektné kolo sa v špekulantských kolách
   nezapočítavajú.
-- Trofeje a stav témy sú súčasťou exportu/importu.
+- Trofeje a stav témy sú súčasťou exportu/importu nastavení.
+
+---
+
+## 🌐 Webová verzia a build (od v6.0)
+
+Projekt má tri podoby:
+
+| Súbor / priečinok | Účel |
+|---|---|
+| `pravopisny-trener.html` | **Master** — komentovaný zdrojový kód s históriou verzií. Needituje sa nič iné; web aj offline verzia sa z neho generujú. |
+| `build_web.py` | Build skript (Python 3, bez externých závislostí okrem Pillow na ikony). Spustenie: `python3 build_web.py` → vytvorí `dist/`. |
+| `dist/` | Hotové nasadenie pre Cloudflare Pages + offline verzia na stiahnutie. |
+
+Obsah `dist/`: `index.html` + `app.css` + `app.js` (bez komentárov, oddelené
+kvôli prísnemu CSP), `sw.js` + `manifest.webmanifest` (PWA/offline),
+`podmienky.html` (podmienky použitia, súkromie, kontakt, návod na offline),
+`_headers` (bezpečnostné hlavičky), `robots.txt`, `icons/` a
+`pravopisny-trener-offline.html` (jednosúborová verzia na stiahnutie).
+
+**Pred nasadením nahradiť placeholdery** (build ich vypíše):
+`KONTAKT@VASA-DOMENA.SK`, `https://github.com/VAS-UCET/pravopisny-trener`.
+
+### Bezpečnosť webovej verzie
+
+- CSP `default-src 'none'` + výhradne vlastné zdroje (`script-src 'self'`,
+  `style-src 'self'`), žiadny inline kód, žiadne tretie strany, žiadne
+  cookies, žiadna analytika, žiadne odosielanie dát.
+- Ďalšie hlavičky: HSTS, nosniff, no-referrer, frame-ancestors 'none',
+  COOP/CORP, Permissions-Policy s vypnutými senzormi.
+- Kontakt je čistý text (bez formulára), podmienky použitia sú statická
+  stránka. Návrh podmienok nie je právne poradenstvo — pred ostrým
+  nasadením odporúčam kontrolu právnikom.
+
+### Nasadenie na Cloudflare (checklist)
+
+1. Doména v Cloudflare DNS, zapnúť **DNSSEC** (DS záznam u registrátora).
+2. **Pages**: pripojiť GitHub repo, build command žiadny, output `dist/`.
+3. SSL/TLS: **Full (strict)**, Always Use HTTPS, minimum TLS 1.2.
+4. Security: **Free Managed WAF ruleset** (aktívny automaticky),
+   **Bot Fight Mode** zapnúť.
+5. HSTS posiela `_headers`; preload zatiaľ nezapínať (ťažko sa vracia).
+6. Voliteľne **Email Routing** na príjem pošty pre kontaktnú adresu.
+
+### Offline používanie (pre návštevníkov)
+
+- **iPhone/iPad:** stránku otvoriť v Safari → Zdieľať → **Pridať na plochu**
+  → appka funguje bez internetu s trvalým ukladaním. (Otváranie stiahnutého
+  .html zo Súborov iOS blokuje bez ohľadu na Lockdown Mode — PWA je správna
+  cesta.)
+- **Počítač/Android:** tlačidlo „Stiahnuť offline verziu" v pätičke — jeden
+  súbor, žiadne volania, beží z disku.
+
+---
 
 ## Ukladanie dát
 
-- Štatistiky: `pt_stats_v1`, nastavenia: `pt_settings_v1` v **localStorage**
-  (viazané na konkrétny prehliadač a profil).
-- Bez localStorage (náhľad, prísny privátny režim) aplikácia beží s dočasnou
-  pamäťou.
-- **Export/Import** v Štatistikách: `pravopisny-trener-stats.json`.
+- Štatistiky: kľúč `pt_stats_v1`, nastavenia: `pt_settings_v1` v **localStorage**
+  prehliadača. Dáta sú viazané na konkrétny prehliadač a profil na danom
+  zariadení.
+- Ak localStorage nie je dostupné (napr. náhľad, prísny privátny režim),
+  aplikácia beží ďalej s dočasnou pamäťou (dáta sa po zatvorení stratia).
+- **Export/Import** v Štatistikách: JSON súbor `pravopisny-trener-stats.json`
+  na zálohu alebo prenos pokroku medzi zariadeniami.
 - „Vymazať" zmaže štatistiky po potvrdení; slovník ostáva nedotknutý.
+
+---
 
 ## Ako pridať alebo upraviť slová
 
-Slovník je medzi značkami `/*DICT-START*/` a `/*DICT-END*/`:
+Slovník je v súbore medzi značkami `/*DICT-START*/` a `/*DICT-END*/`.
+Formát položky:
 
 ```js
 {id:'vb01', t:'w', x:'b_k', a:'ý', c:'vb', e:'vybrané slovo po B', m:'🐂'}
@@ -129,38 +215,41 @@ Slovník je medzi značkami `/*DICT-START*/` a `/*DICT-END*/`:
 |------|--------|
 | `id` | jedinečný identifikátor (viaže sa naň štatistika) |
 | `t`  | `'w'` slovo / `'s'` veta |
-| `x`  | text s **presne jedným** `_` na mieste i/y |
-| `a`  | správne písmeno: `i`, `í`, `y`, `ý` |
+| `x`  | text s **presne jedným** podčiarkovníkom `_` na mieste i/y |
+| `a`  | správne písmeno: `i`, `í`, `y`, `ý` (dĺžeň rieši aplikácia) |
 | `c`  | kód kategórie (`vb vm vp vr vs vv vz tv mk dl ob pr gr cu`) |
-| `e`  | krátke vysvetlenie pravidla |
+| `e`  | krátke vysvetlenie pravidla (zobrazí sa pri odpovedi) |
 | `m`  | voliteľné emoji |
 | `w`  | pri vetách: cieľové slovo (pre zoznamy chýb a štatistiky) |
 
-Počty, posuvník aj režimy sa prispôsobia automaticky. Vety s aspoň 2 výskytmi
-i/y sa zaradia aj do režimu „Nájdi chybu".
+Po pridaní netreba nič prepočítavať — počty, posuvník aj režimy sa prispôsobia
+automaticky. Vety s aspoň 2 výskytmi i/y sa automaticky zaradia aj do režimu
+„Nájdi chybu".
 
-## Overenie obsahu
+---
 
-Slovník a pravidlá boli overené proti verejným školským zdrojom:
+## Overenie obsahu (zdroje)
 
-- Vybrané slová po B, M, P, R, S, V, Z — eduworld.sk, viemeposlovensky.sk, doucma.sk.
-- Klasifikácia spoluhlások a pravidlo di/ti/ni/li — jazyková poradňa SME
-  (JÚĽŠ SAV), eductify.com. „lyže, mlyn, plyn" nie sú vybrané slová — L je tvrdá.
-- Cudzie výnimky, zvukomalebné slová, predpony od-/pred- — eductify.com.
-- Gramatické koncovky (vzor pekný, oni/ony, sami/samy, siedmi/siedmy, minulý
-  čas -li) — školské prehľady vzorov.
+Slovník a pravidlá boli pri tvorbe overené proti verejným školským zdrojom:
 
-## Súkromie
+- Zoznamy vybraných slov po B, M, P, R, S, V, Z — eduworld.sk (študijný
+  materiál pre 3.–9. ročník ZŠ), krížovo viemeposlovensky.sk a doucma.sk.
+- Klasifikácia spoluhlások (tvrdé h, ch, k, g, d, t, n, **l**; mäkké c, dz, j,
+  ď, ť, ň, ľ, č, dž, š, ž; obojaké b, m, p, r, s, v, z, f) a pravidlo
+  di/ti/ni/li podľa výslovnosti — jazyková poradňa SME (JÚĽŠ SAV), eductify.com.
+  Pozn.: „lyže, mlyn, plyn" preto nie sú vybrané slová — L je tvrdá spoluhláska.
+- Cudzie výnimky (kino, gitara, diktát, história, kilo- vs. fyzika, cyklista),
+  zvukomalebné slová a predpony od-/pred- — eductify.com.
+- Gramatické koncovky (vzor pekný: N pl. mužský životný → í; I pl. → -ými;
+  oni/sami/radi vs. ony/samy/rady; siedmi/siedmy; Katkini; minulý čas vždy -li)
+  — školské prehľady vzorov prídavných mien a zámen.
 
-Súbor neobsahuje osobné údaje, nevolá žiadnu sieť a všetko (zvuky, grafika,
-dáta) je vnorené. Zapisujú sa len lokálne štatistiky hráča v prehliadači.
+---
 
-## Verzie
+## Hygiena a súkromie
 
-| Verzia | Dátum | Zmeny |
-|--------|------------|-------|
-| v5.0 | 2026-07-26 | Dlhšie zobrazenie achievementov a sovích oznámení; 💡 žiarovka vo všetkých režimoch (v arkáde pozastaví padanie); trvalý mini-návod na domovskej obrazovke; väčšie medzery v režime Nájdi chybu. |
-| v4.0 | 2026-07-18 | Easter eggy a trofeje: špekulantské výbery (čisto-Y aj čisto-I), odomknutie témy 🌙 Nočný zošit, ochrana váh, trofeje Séria 10/20 a Perfektné kolo, interaktívna sova, trofejná polička. |
-| v3.0 | 2026-07-18 | Obrazovka „📖 Vysvetlivky": slovník 245 položiek podľa kategórií, vyhľadávanie, farebné zvýraznenie i/y a pravidlá. |
-| v2.0 | 2026-07-18 | Tlačidlá „i (í)" a „y (ý)" s popisom mäkké/tvrdé; označenie verzie 2 na domovskej obrazovke; verzia exportu 2.0. |
-| v1.0 | 2026-07-18 | Prvé vydanie: 3 režimy, 245 položiek, adaptívny výber, štatistiky, export/import, zvuky, konfety. |
+- Súbor neobsahuje žiadne osobné ani citlivé údaje.
+- Nevykonáva žiadne sieťové volania; všetko (zvuky, grafika, dáta) je vnorené.
+- Jediné zapisované dáta sú lokálne štatistiky hráča v prehliadači.
+
+<!-- v6.0 (2026-08-04) — koniec súboru -->
