@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect x="0" y="0" width="512" height="512" rx="110" fill="#FDFBF2"/>
+<line x1="70" y1="205" x2="457" y2="205" stroke="#C4D9E9" stroke-width="9"/>
+<line x1="70" y1="285" x2="457" y2="285" stroke="#C4D9E9" stroke-width="9"/>
+<line x1="70" y1="365" x2="457" y2="365" stroke="#C4D9E9" stroke-width="9"/>
+<line x1="120" y1="55" x2="120" y2="457" stroke="#EC8A80" stroke-width="11"/>
+<text x="170" y="358" font-family="DejaVu Sans, Arial, sans-serif" font-size="300" font-weight="bold" fill="#1E88A8">i</text>
+<text x="280" y="358" font-family="DejaVu Sans, Arial, sans-serif" font-size="300" font-weight="bold" fill="#E8842B">y</text>
+</svg>
