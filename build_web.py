@@ -3,6 +3,11 @@
 #  build_web.py — Pravopisný tréner: build webovej a offline distribúcie
 # =====================================================================
 #  VERSION HISTORY
+#  v1.1 (2026-10-19)
+#    - VER = 6.1 (master v6.1: sanitizacia importu statistik).
+#    - Oprava: patička webu sa vkladala len pri presnom texte
+#      "verzia 6"; teraz regex na lubovolnu verziu + assert, aby
+#      zmena verzie patičku potichu nevyradila.
 #  v1.0 (2026-08-04)
 #    - Prvé vydanie. Z master súboru pravopisny-trener.html generuje:
 #        dist/index.html                     (web, bez komentárov)
@@ -23,8 +28,8 @@ import re, os, sys, subprocess, shutil
 
 MASTER = "pravopisny-trener.html"
 DIST = "dist"
-VER = "6.0"
-DATE = "2026-08-04"
+VER = "6.1"
+DATE = "2026-10-19"
 
 # ------------------------------------------------------------------ #
 #  Placeholdery — pred nasadením nahradiť skutočnými hodnotami        #
@@ -115,8 +120,12 @@ FOOT = (
     '        <div class="foot-contact">Kontakt: ' + PH_EMAIL + "</div>\n"
     "      </div>"
 )
-html = html.replace('<div class="verline">verzia 6</div>',
-                    '<div class="verline">verzia 6 · web</div>\n      ' + FOOT)
+# Pätička sa vkladá za riadok s verziou; text verzie sa berie z mastera,
+# takže zmena verzie ju nevyradí. Chýbajúca značka = chyba buildu.
+html, n_foot = re.subn(r'<div class="verline">(verzia [^<]+)</div>',
+                       lambda m: '<div class="verline">' + m.group(1) + ' · web</div>\n      ' + FOOT,
+                       html)
+assert n_foot == 1, "Značka verline pre pätičku nenájdená (počet: " + str(n_foot) + ")"
 index = tidy(html)
 
 # ------------------------------------------------------------------ #
@@ -361,4 +370,4 @@ print("  1) " + PH_EMAIL + "   (index.html, podmienky.html)")
 print("  2) " + PH_GITHUB + "   (podmienky.html, offline verzia)")
 print("  3) " + PH_DOMAIN + "   (podľa potreby v README)")
 
-# v1.0 — koniec súboru
+# v1.1 — koniec súboru

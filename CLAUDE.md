@@ -1,6 +1,7 @@
 <!--
   CLAUDE.md — kontext projektu pre Claude Code
   VERSION HISTORY
+  v1.1 (2026-10-19) — stav projektu v6.1 (sanitizácia importu), build_web.py v1.1.
   v1.0 (2026-10-19) — prvé vydanie: stav projektu v6.0, pravidlá práce,
                       otvorené úlohy pre v7, plán nasadenia na Cloudflare.
 -->
@@ -11,15 +12,15 @@ Bezplatná detská hra na precvičovanie slovenského pravopisu (mäkké i / tvr
 Komunikácia s vlastníkom repa prebieha **po slovensky**, výstupy (texty v appke,
 README) sú po slovensky.
 
-## Stav: v6.0 (2026-08-04)
+## Stav: v6.1 (2026-10-19)
 
 | Súbor | Úloha |
 |---|---|
 | `pravopisny-trener.html` | **Master / zdroj pravdy.** Komentovaný, s históriou verzií v hlavičke. Všetky zmeny hry sa robia len tu. |
-| `build_web.py` | Build skript (v1.0). `python3 build_web.py` → pregeneruje `dist/`. Vyžaduje Python 3, Node.js (syntax check), Pillow (ikony). |
+| `build_web.py` | Build skript (v1.1). `python3 build_web.py` → pregeneruje `dist/`. Vyžaduje Python 3, Node.js (syntax check), Pillow (ikony). |
 | `dist/` | Vygenerované nasadenie pre Cloudflare Pages + offline verzia. **Needitovať ručne** — vždy pregenerovať buildom. Je commitnuté zámerne, aby Pages nepotreboval build krok. |
-| `README.md` | Hlavné README projektu (v6.0). |
-| `build_web_README.md` | Párové README k build skriptu (v1.0). |
+| `README.md` | Hlavné README projektu (v6.1). |
+| `build_web_README.md` | Párové README k build skriptu (v1.1). |
 
 Obsah hry: 245 položiek v 14 kategóriách, 3 režimy (Doplňovačka, Padajúce slová,
 Nájdi chybu), adaptívne váhy (nové 1,3 / chyba ×3 max 30 / správne ×0,6 min 0,35),
@@ -100,4 +101,4 @@ Ukážky dvojverší (sadu pre všetkých 7 písmen ešte treba dopísať a over
    alebo len serverové metriky CF). Kontaktný formulár zatiaľ nie je — kontakt
    je čistý text.
 
-<!-- v1.0 (2026-10-19) — koniec súboru -->
+<!-- v1.1 (2026-10-19) — koniec súboru -->
