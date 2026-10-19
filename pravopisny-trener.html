@@ -5,6 +5,17 @@
   Interaktívna doplňovačka na precvičovanie slovenského pravopisu
 =====================================================================
   VERSION HISTORY
+  v6.0 (2026-08-04)
+    - Priprava na webove nasadenie: odstranene vsetky inline style
+      atributy (nahradene triedami) a inline style v innerHTML
+      (nahradene CSSOM/triedami), aby kod fungoval pod prisnym
+      Content-Security-Policy bez 'unsafe-inline'.
+    - Poznamka v arkadovom feedbacku pouziva farbu temy (funguje
+      spravne aj v nocnom rezime).
+    - Ziadne funkcne zmeny hry; slovnik bez zmeny.
+    - Tento subor je master/zdrojovy kod. Webova a offline
+      distribucia sa generuju skriptom build_web.py (v repo).
+    - Verzia exportu statistik zvysena na 6.0.
   v5.0 (2026-07-26)
     - Achievement a sovie toasty zostavaju zobrazene 3x dlhsie
       (achievement ~12,6 s, sovia bublina ~27 s; klepnutim sa
@@ -353,6 +364,14 @@ body.night .iy:hover{background:#243642;}
 body.night .iy.hit-good{background:#1F3A2C;}
 body.night .iy.hit-bad{background:#452726;}
 
+/* ---------- utility (CSP-friendly nahrada inline stylov) ---------- */
+.head-row{display:flex;align-items:center;gap:14px;}
+.h-md{font-size:26px;}
+.h-sm{font-size:22px;margin:0;}
+.sub-tight{margin-bottom:12px;}
+.hidden{display:none;}
+.arc-note{font-size:15px;color:var(--ink-soft);}
+
 /* ---------- konfety ---------- */
 .cf{position:fixed;top:-14px;font-size:20px;pointer-events:none;z-index:99;
   animation:cfall linear forwards;}
@@ -377,7 +396,7 @@ body.night .iy.hit-bad{background:#452726;}
   <!-- ================= DOMOV ================= -->
   <section id="scr-home" class="screen on">
     <div class="paper tight">
-      <div style="display:flex;align-items:center;gap:14px;">
+      <div class="head-row">
         <div class="owl" id="owlBtn" title="🦉">🦉</div>
         <div>
           <h1 class="title">Mäkké i či tvrdé y?</h1>
@@ -432,7 +451,7 @@ body.night .iy.hit-bad{background:#452726;}
         <button class="chip-btn" id="btnNight" disabled>🔒 Nočný zošit</button>
         <button class="chip-btn" id="btnSound">🔊 Zvuk</button>
       </div>
-      <div class="verline">verzia 5</div>
+      <div class="verline">verzia 6</div>
     </div>
   </section>
 
@@ -516,7 +535,7 @@ body.night .iy.hit-bad{background:#452726;}
       <button class="chip-btn" data-home>← Domov</button>
     </div>
     <div class="paper tight">
-      <h1 class="title" style="font-size:26px;">📊 Štatistiky</h1>
+      <h1 class="title h-md">📊 Štatistiky</h1>
       <div id="statBody"></div>
       <div class="io-row">
         <button class="chip-btn" id="btnProblem">🔥 Precvičiť problémové</button>
@@ -524,7 +543,7 @@ body.night .iy.hit-bad{background:#452726;}
         <button class="chip-btn" id="btnImport">⬆️ Import</button>
         <button class="chip-btn" id="btnReset">🗑️ Vymazať</button>
       </div>
-      <input type="file" id="impFile" accept="application/json" style="display:none">
+      <input type="file" id="impFile" accept="application/json" class="hidden">
     </div>
   </section>
 
@@ -534,8 +553,8 @@ body.night .iy.hit-bad{background:#452726;}
       <button class="chip-btn" data-home>← Domov</button>
     </div>
     <div class="paper tight">
-      <h1 class="title" style="font-size:26px;">📖 Slovník s vysvetlivkami</h1>
-      <p class="subtitle" style="margin-bottom:12px;">Pri každom slove je pravidlo, prečo sa píše mäkké i alebo tvrdé y. Farebné písmeno ukazuje riešenie.</p>
+      <h1 class="title h-md">📖 Slovník s vysvetlivkami</h1>
+      <p class="subtitle sub-tight">Pri každom slove je pravidlo, prečo sa píše mäkké i alebo tvrdé y. Farebné písmeno ukazuje riešenie.</p>
       <input class="dict-search" id="dictSearch" type="search" placeholder="🔎 Hľadaj slovo…" autocomplete="off">
       <div id="dictBody"></div>
     </div>
@@ -545,7 +564,7 @@ body.night .iy.hit-bad{background:#452726;}
   <div class="ov" id="bulbOv">
     <div class="ov-card">
       <div class="ov-head">
-        <h1 class="title" style="font-size:22px;margin:0;">💡 Prečo i/y?</h1>
+        <h1 class="title h-sm">💡 Prečo i/y?</h1>
         <button class="ov-close" id="bulbClose">✕ Zavrieť</button>
       </div>
       <div id="bulbBody"></div>
@@ -1181,7 +1200,7 @@ function arcWrong(d, ttl){
   R.bad++; R.streak = 0; R.lives--; R.mist.push(d);
   sndBad(); updHud();
   var fb = el("arcFb");
-  fb.innerHTML = ttl + "<br>Správne: <b>" + fullOf(d) + "</b><br><span style=\"font-size:15px;color:#6B6B78\">" + d.e + "</span>";
+  fb.innerHTML = ttl + "<br>Správne: <b>" + fullOf(d) + "</b><br><span class=\"arc-note\">" + d.e + "</span>";
   fb.classList.add("on");
   el("aBtnI").disabled = true; el("aBtnY").disabled = true;
   setTimeout(function(){ R.i++; nextArcade(); }, 2100);
@@ -1324,7 +1343,9 @@ function renderStats(){
     l.innerHTML = "<span>" + c[1] + "</span><span>" + o + "/" + t + "</span>";
     body.appendChild(l);
     var b = document.createElement("div"); b.className = "bar";
-    b.innerHTML = "<i style=\"width:" + Math.round(o / t * 100) + "%\"></i>";
+    var bi = document.createElement("i");
+    bi.style.width = Math.round(o / t * 100) + "%";
+    b.appendChild(bi);
     body.appendChild(b);
   });
   var probs = problemItems();
@@ -1370,7 +1391,7 @@ el("btnProblem").addEventListener("click", function(){
   startRound("quiz", items.slice(0, Math.max(10, Math.min(items.length, SET.count))));
 });
 el("btnExport").addEventListener("click", function(){
-  var data = { app: "pravopisny-trener", ver: "5.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
+  var data = { app: "pravopisny-trener", ver: "6.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
   var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1663,4 +1684,4 @@ applyNight();
 </script>
 </body>
 </html>
-<!-- v5.0 (2026-07-26) — koniec súboru -->
+<!-- v6.0 (2026-08-04) — koniec súboru -->

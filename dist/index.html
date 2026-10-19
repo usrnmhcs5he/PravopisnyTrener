@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pravopisný tréner — bezplatná hra na precvičovanie mäkkého i a tvrdého y. Vybrané slová, gramatické koncovky, tri režimy, funguje aj offline.">
+<meta name="theme-color" content="#1E88A8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Pravopisný tréner — mäkké i / tvrdé y</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="wrap">
+
+  <section id="scr-home" class="screen on">
+    <div class="paper tight">
+      <div class="head-row">
+        <div class="owl" id="owlBtn" title="🦉">🦉</div>
+        <div>
+          <h1 class="title">Mäkké i či tvrdé y?</h1>
+          <p class="subtitle">Pravopisný tréner — vyber si režim a poď na to!</p>
+        </div>
+      </div>
+
+      <div class="modes">
+        <button class="mode-card" data-mode="quiz">
+          <div class="ic">📝</div><h3>Doplňovačka</h3>
+          <p>Doplň i alebo y do slova či vety. Dĺžeň doplníme za teba.</p>
+        </button>
+        <button class="mode-card" data-mode="arcade">
+          <div class="ic">🚀</div><h3>Padajúce slová</h3>
+          <p>Stihni odpovedať, kým slovo dopadne. Máš 3 životy!</p>
+        </button>
+        <button class="mode-card" data-mode="find">
+          <div class="ic">🔍</div><h3>Nájdi chybu</h3>
+          <p>Vo vete sa skrýva jedno nesprávne i/y. Klepni naň!</p>
+        </button>
+      </div>
+
+      <div class="guide">
+        🥚 V hre sú <b>skryté prekvapenia</b> — objavuj a skúšaj rôzne kombinácie kategórií.<br>
+        📖 Všetky slová a pravidlá nájdeš vo <b>Vysvetlivkách</b>.<br>
+        💡 Počas hry klepni na <b>žiarovku</b> — zopakuje, prečo je v slove i alebo y, a nájdeš tam aj posledné správy.
+      </div>
+
+      <div class="set-block">
+        <h4>Koľko slov v kole?</h4>
+        <div class="count-row">
+          <input type="range" id="countRange" min="10" max="245" step="1" value="15">
+          <div class="count-val" id="countVal">15</div>
+          <div class="quick">
+            <button data-q="10">10</button>
+            <button data-q="20">20</button>
+            <button data-q="40">40</button>
+            <button data-q="max">Max</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="set-block">
+        <h4>Čo chceš precvičovať?</h4>
+        <div class="cats" id="catBox"></div>
+        <div class="pool-info" id="poolInfo"></div>
+      </div>
+
+      <div class="home-foot">
+        <button class="chip-btn" id="btnStats">📊 Štatistiky</button>
+        <button class="chip-btn" id="btnDict">📖 Vysvetlivky</button>
+        <button class="chip-btn" id="btnNight" disabled>🔒 Nočný zošit</button>
+        <button class="chip-btn" id="btnSound">🔊 Zvuk</button>
+      </div>
+      <div class="verline">verzia 6 · web</div>
+      <div class="site-foot">
+        <a href="pravopisny-trener-offline.html" download="pravopisny-trener-offline.html">⬇️ Stiahnuť offline verziu</a>
+        <span class="dot">·</span>
+        <a href="podmienky.html">Podmienky použitia a súkromie</a>
+        <div class="foot-contact">Kontakt: KONTAKT@VASA-DOMENA.SK</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scr-quiz" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+      <button class="chip-btn" id="qBulb" title="Prečo i/y? Vysvetlenia a správy">💡</button>
+      <div class="spacer"></div>
+      <div class="streak" id="qStreak"></div>
+    </div>
+    <div class="progress"><i id="qProg"></i></div>
+    <div class="paper" id="qCard">
+      <div class="q-emoji" id="qEmoji"></div>
+      <div class="q-word" id="qWord"></div>
+      <div class="q-hint" id="qHint"></div>
+      <div class="answers">
+        <button class="ans i" id="btnI">i <span class="alt">(í)</span><small>mäkké — aj dlhé</small></button>
+        <button class="ans y" id="btnY">y <span class="alt">(ý)</span><small>tvrdé — aj dlhé</small></button>
+      </div>
+      <button class="next-btn" id="qNext">Ďalej ⏎</button>
+    </div>
+  </section>
+
+  <section id="scr-arcade" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+      <button class="chip-btn" id="aBulb" title="Prečo i/y? Vysvetlenia a správy">💡</button>
+      <div class="spacer"></div>
+      <div class="streak" id="aStreak"></div>
+    </div>
+    <div class="sky" id="sky">
+      <div class="hud"><span id="aLives">❤️❤️❤️</span><span id="aScore">0</span></div>
+      <div class="faller" id="faller"></div>
+      <div class="arc-fb" id="arcFb"></div>
+    </div>
+    <div class="answers">
+      <button class="ans i" id="aBtnI">i <span class="alt">(í)</span><small>mäkké — aj dlhé</small></button>
+      <button class="ans y" id="aBtnY">y <span class="alt">(ý)</span><small>tvrdé — aj dlhé</small></button>
+    </div>
+  </section>
+
+  <section id="scr-find" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+      <button class="chip-btn" id="fBulb" title="Prečo i/y? Vysvetlenia a správy">💡</button>
+      <div class="spacer"></div>
+      <div class="streak" id="fStreak"></div>
+    </div>
+    <div class="progress"><i id="fProg"></i></div>
+    <p class="find-note">Jedno i/y je v tejto vete nesprávne. Klepni naň!</p>
+    <div class="paper" id="fCard">
+      <div class="find-sent" id="fSent"></div>
+      <div class="q-hint" id="fHint"></div>
+      <button class="next-btn" id="fNext">Ďalej ⏎</button>
+    </div>
+  </section>
+
+  <section id="scr-results" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+    </div>
+    <div class="paper tight">
+      <div class="stars" id="rStars"></div>
+      <div class="score-line" id="rScore"></div>
+      <div id="rMist"></div>
+      <div class="res-btns">
+        <button class="chip-btn" id="rAgain">🔁 Ešte raz</button>
+        <button class="chip-btn" id="rOnlyBad">🔥 Len chybné</button>
+        <button class="chip-btn" data-home>🏠 Domov</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="scr-stats" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+    </div>
+    <div class="paper tight">
+      <h1 class="title h-md">📊 Štatistiky</h1>
+      <div id="statBody"></div>
+      <div class="io-row">
+        <button class="chip-btn" id="btnProblem">🔥 Precvičiť problémové</button>
+        <button class="chip-btn" id="btnExport">⬇️ Export</button>
+        <button class="chip-btn" id="btnImport">⬆️ Import</button>
+        <button class="chip-btn" id="btnReset">🗑️ Vymazať</button>
+      </div>
+      <input type="file" id="impFile" accept="application/json" class="hidden">
+    </div>
+  </section>
+
+  <section id="scr-dict" class="screen">
+    <div class="topbar">
+      <button class="chip-btn" data-home>← Domov</button>
+    </div>
+    <div class="paper tight">
+      <h1 class="title h-md">📖 Slovník s vysvetlivkami</h1>
+      <p class="subtitle sub-tight">Pri každom slove je pravidlo, prečo sa píše mäkké i alebo tvrdé y. Farebné písmeno ukazuje riešenie.</p>
+      <input class="dict-search" id="dictSearch" type="search" placeholder="🔎 Hľadaj slovo…" autocomplete="off">
+      <div id="dictBody"></div>
+    </div>
+  </section>
+
+  <div class="ov" id="bulbOv">
+    <div class="ov-card">
+      <div class="ov-head">
+        <h1 class="title h-sm">💡 Prečo i/y?</h1>
+        <button class="ov-close" id="bulbClose">✕ Zavrieť</button>
+      </div>
+      <div id="bulbBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
