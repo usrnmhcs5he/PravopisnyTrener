@@ -10,6 +10,7 @@ Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závis
 
 | Verzia | Dátum | Zmeny |
 |--------|------------|-------|
+| v6.1 | 2026-10-19 | Bezpečnosť: import štatistík (a načítanie z localStorage) sa sanitizuje — zachovajú sa len známe položky, kategórie a trofeje s hodnotami správneho typu, takže podvrhnutý JSON nemôže vložiť HTML do stránky. Žiadne funkčné zmeny hry. |
 | v6.0 | 2026-08-04 | Príprava na webové nasadenie: master očistený od inline štýlov (funguje pod prísnym CSP bez `unsafe-inline`), nový build skript `build_web.py` generuje webovú distribúciu (oddelené súbory, PWA, podmienky použitia, bezpečnostné hlavičky pre Cloudflare Pages, ikony) a jednosúborovú offline verziu bez komentárov. Žiadne funkčné zmeny hry. |
 | v5.0 | 2026-07-26 | Achievement a sovie oznámenia zostávajú zobrazené 3× dlhšie (klepnutím sa zavrú skôr). Nová žiarovka 💡 v hornej lište všetkých režimov — prehľad „Prečo i/y?" s poslednými zodpovedanými slovami (plný tvar + pravidlo) a logom posledných správ; v arkáde sa počas otvorenej žiarovky padanie poctivo pozastaví. Trvalý mini-návod na domovskej obrazovke. Väčšie medzery medzi slovami v režime Nájdi chybu. |
 | v4.0 | 2026-07-18 | Easter eggy a trofeje: detekcia „špekulantských" výberov (čisto-Y aj čisto-I) s achievementmi, trvalé odomknutie témy 🌙 Nočný zošit, ochrana váh v špekulantských kolách, trofeje Séria 10/20 a Perfektné kolo, interaktívna sova, trofejná polička v Štatistikách. |
@@ -198,6 +199,8 @@ kvôli prísnemu CSP), `sw.js` + `manifest.webmanifest` (PWA/offline),
   aplikácia beží ďalej s dočasnou pamäťou (dáta sa po zatvorení stratia).
 - **Export/Import** v Štatistikách: JSON súbor `pravopisny-trener-stats.json`
   na zálohu alebo prenos pokroku medzi zariadeniami.
+- Import akceptuje len známe položky slovníka, kategórie a trofeje s
+  číselnými/logickými hodnotami; všetko ostatné zo súboru sa ignoruje (od v6.1).
 - „Vymazať" zmaže štatistiky po potvrdení; slovník ostáva nedotknutý.
 
 ---
@@ -252,4 +255,4 @@ Slovník a pravidlá boli pri tvorbe overené proti verejným školským zdrojom
 - Nevykonáva žiadne sieťové volania; všetko (zvuky, grafika, dáta) je vnorené.
 - Jediné zapisované dáta sú lokálne štatistiky hráča v prehliadači.
 
-<!-- v6.0 (2026-08-04) — koniec súboru -->
+<!-- v6.1 (2026-10-19) — koniec súboru -->
