@@ -321,14 +321,29 @@ var DICT = [
 
 function el(i){ return document.getElementById(i); }
 var ALL_CATS = CATS.map(function(c){ return c[0]; });
-var SET = store.get(K_SET) || { count:15, cats:ALL_CATS.slice(), sound:true };
-if (!SET.cats || !SET.cats.length) SET.cats = ALL_CATS.slice();
-if (typeof SET.count !== "number") SET.count = 15;
-if (typeof SET.sound !== "boolean") SET.sound = true;
-if (!SET.ach) SET.ach = {};
-if (typeof SET.night !== "boolean") SET.night = false;
-if (typeof SET.owlTaps !== "number") SET.owlTaps = 0;
-var STATS = store.get(K_STATS) || {};
+
+function cleanNum(v, def){ return (typeof v === "number" && isFinite(v) && v >= 0) ? v : def; }
+function cleanSet(raw){
+  var r = (raw && typeof raw === "object") ? raw : {};
+  var cats = Array.isArray(r.cats) ? r.cats.filter(function(c){ return ALL_CATS.indexOf(c) >= 0; }) : [];
+  var ach = {};
+  if (r.ach && typeof r.ach === "object"){
+    Object.keys(r.ach).forEach(function(k){
+      var v = r.ach[k];
+      if (/^[A-Za-z0-9]{1,16}$/.test(k) && (v === true || (typeof v === "number" && isFinite(v)))) ach[k] = v;
+    });
+  }
+  return {
+    count: Math.round(cleanNum(r.count, 15)) || 15,
+    cats: cats.length ? cats : ALL_CATS.slice(),
+    sound: typeof r.sound === "boolean" ? r.sound : true,
+    ach: ach,
+    night: typeof r.night === "boolean" ? r.night : false,
+    owlTaps: Math.floor(cleanNum(r.owlTaps, 0))
+  };
+}
+var SET = cleanSet(store.get(K_SET));
+var STATS = {};
 function saveSet(){ store.set(K_SET, SET); }
 function saveStats(){ store.set(K_STATS, STATS); }
 
@@ -348,6 +363,23 @@ var BYID = {};
 DICT.forEach(function(d){ BYID[d.id] = d; });
 
 var W_NEW = 1.3, W_BAD = 3, W_MAX = 30, W_OK = 0.6, W_MIN = 0.35;
+function cleanStats(raw){
+  var out = {};
+  if (!raw || typeof raw !== "object") return out;
+  Object.keys(raw).forEach(function(id){
+    var s = raw[id];
+    if (!BYID.hasOwnProperty(id) || !s || typeof s !== "object") return;
+    var ok = Math.floor(cleanNum(s.ok, 0)), bad = Math.floor(cleanNum(s.bad, 0));
+    out[id] = {
+      s: Math.max(Math.floor(cleanNum(s.s, 0)), ok + bad),
+      ok: ok, bad: bad,
+      w: Math.min(W_MAX, Math.max(W_MIN, cleanNum(s.w, W_NEW))),
+      last: cleanNum(s.last, 0)
+    };
+  });
+  return out;
+}
+STATS = cleanStats(store.get(K_STATS));
 function weightOf(id){ var s = STATS[id]; return s ? s.w : W_NEW; }
 function markAnswer(id, ok){
   var s = STATS[id] || (STATS[id] = { s:0, ok:0, bad:0, w:W_NEW, last:0 });
@@ -773,7 +805,7 @@ el("btnProblem").addEventListener("click", function(){
   startRound("quiz", items.slice(0, Math.max(10, Math.min(items.length, SET.count))));
 });
 el("btnExport").addEventListener("click", function(){
-  var data = { app: "pravopisny-trener", ver: "6.0", exported: new Date().toISOString(), stats: STATS, settings: SET };
+  var data = { app: "pravopisny-trener", ver: "6.1", exported: new Date().toISOString(), stats: STATS, settings: SET };
   var blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -788,17 +820,8 @@ el("impFile").addEventListener("change", function(){
   rd.onload = function(){
     try {
       var obj = JSON.parse(rd.result);
-      if (obj && obj.stats){ STATS = obj.stats; saveStats(); }
-      if (obj && obj.settings){
-        SET = obj.settings;
-        if (!SET.cats || !SET.cats.length) SET.cats = ALL_CATS.slice();
-        if (typeof SET.count !== "number") SET.count = 15;
-        if (typeof SET.sound !== "boolean") SET.sound = true;
-        if (!SET.ach) SET.ach = {};
-        if (typeof SET.night !== "boolean") SET.night = false;
-        if (typeof SET.owlTaps !== "number") SET.owlTaps = 0;
-        saveSet(); applyNight();
-      }
+      if (obj && obj.stats){ STATS = cleanStats(obj.stats); saveStats(); }
+      if (obj && obj.settings){ SET = cleanSet(obj.settings); saveSet(); applyNight(); }
       renderStats(); refreshHome();
       alert("Import hotový.");
     } catch (e){ alert("Súbor sa nepodarilo načítať — nie je to platný export."); }

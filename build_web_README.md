@@ -8,6 +8,7 @@ distribúciu a jednosúborovú offline verziu.
 
 | Verzia | Dátum | Zmeny |
 |--------|------------|-------|
+| v1.1 | 2026-10-19 | `VER = "6.1"`, `DATE` = dátum vydania 6.1. Oprava: pätička webu (offline verzia, podmienky, kontakt) sa vkladá pri ľubovoľnom texte verzie a build zlyhá, ak značka chýba — predtým zmena verzie pätičku potichu vynechala. |
 | v1.0 | 2026-08-04 | Prvé vydanie: generovanie `dist/` (web + PWA + podmienky + hlavičky + ikony + offline verzia) s QA kontrolami. |
 
 ## Použitie
@@ -52,4 +53,4 @@ Výstup neobsahuje žiadne citlivé údaje, IP adresy, mená ani interné
 identifikátory; kontaktné údaje sú výhradne placeholdery určené na ručné
 nahradenie. Skript nevykonáva žiadne sieťové volania.
 
-<!-- v1.0 (2026-08-04) — koniec súboru -->
+<!-- v1.1 (2026-10-19) — koniec súboru -->

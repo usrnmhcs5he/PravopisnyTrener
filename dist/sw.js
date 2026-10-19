@@ -1,4 +1,4 @@
-var C="pt-v6.0";
+var C="pt-v6.1";
 var A=["./","./index.html","./app.css","./app.js","./manifest.webmanifest","./podmienky.html","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png","./pravopisny-trener-offline.html"];
 self.addEventListener("install",function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(A);}).then(function(){return self.skipWaiting();}));});
 self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.map(function(n){if(n!==C){return caches.delete(n);}}));}).then(function(){return self.clients.claim();}));});
