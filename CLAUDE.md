@@ -1,6 +1,7 @@
 <!--
   CLAUDE.md — kontext projektu pre Claude Code
   VERSION HISTORY
+  v1.3 (2026-11-04) — build_web.py v1.2 (bezpečný zápis dist/).
   v1.2 (2026-11-04) — pravidlo 7 rozpísané (identita autora, zakázané podpisy
                       Claude, PR vytvára vlastník); .claude/settings.json.
   v1.1 (2026-10-19) — stav projektu v6.1 (sanitizácia importu), build_web.py v1.1.
@@ -19,10 +20,10 @@ README) sú po slovensky.
 | Súbor | Úloha |
 |---|---|
 | `pravopisny-trener.html` | **Master / zdroj pravdy.** Komentovaný, s históriou verzií v hlavičke. Všetky zmeny hry sa robia len tu. |
-| `build_web.py` | Build skript (v1.1). `python3 build_web.py` → pregeneruje `dist/`. Vyžaduje Python 3, Node.js (syntax check), Pillow (ikony). |
+| `build_web.py` | Build skript (v1.2). Zapisuje cez dočasný priečinok; pri chybe `dist/` ostáva nedotknutý. `python3 build_web.py` → pregeneruje `dist/`. Vyžaduje Python 3, Node.js (syntax check), Pillow (ikony). |
 | `dist/` | Vygenerované nasadenie pre Cloudflare Pages + offline verzia. **Needitovať ručne** — vždy pregenerovať buildom. Je commitnuté zámerne, aby Pages nepotreboval build krok. |
 | `README.md` | Hlavné README projektu (v6.1). |
-| `build_web_README.md` | Párové README k build skriptu (v1.1). |
+| `build_web_README.md` | Párové README k build skriptu (v1.2). |
 | `.claude/settings.json` | Nastavenia Claude Code: vypnutá atribúcia Claude, git identita vlastníka. |
 
 Obsah hry: 245 položiek v 14 kategóriách, 3 režimy (Doplňovačka, Padajúce slová,
@@ -118,4 +119,4 @@ Ukážky dvojverší (sadu pre všetkých 7 písmen ešte treba dopísať a over
    alebo len serverové metriky CF). Kontaktný formulár zatiaľ nie je — kontakt
    je čistý text.
 
-<!-- v1.2 (2026-11-04) — koniec súboru -->
+<!-- v1.3 (2026-11-04) — koniec súboru -->

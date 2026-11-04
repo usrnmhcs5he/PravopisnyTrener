@@ -3,6 +3,15 @@
 #  build_web.py — Pravopisný tréner: build webovej a offline distribúcie
 # =====================================================================
 #  VERSION HISTORY
+#  v1.2 (2026-11-04)
+#    - Bezpecny zapis: build ide do docasneho priecinka dist.build-tmp/,
+#      QA bezi tam a dist/ sa nahradi az ked vsetko prejde. Pri chybe
+#      ostava predchadzajuci dist/ nedotknuty (predtym sa dist/ zmazal
+#      hned na zaciatku a pad, napr. pokazeny Pillow, ho nechal bez ikon).
+#    - Kontrola zavislosti (Pillow, Node.js) hned na zaciatku s jasnou
+#      chybovou hlaskou.
+#    - Obnova po preruseni: ak predosly beh skoncil uprostred vymeny,
+#      dist/ sa obnovi zo zalohy dist.old-tmp/.
 #  v1.1 (2026-10-19)
 #    - VER = 6.1 (master v6.1: sanitizacia importu statistik).
 #    - Oprava: patička webu sa vkladala len pri presnom texte
@@ -28,6 +37,8 @@ import re, os, sys, subprocess, shutil
 
 MASTER = "pravopisny-trener.html"
 DIST = "dist"
+STAGE = DIST + ".build-tmp"   # sem sa build zapisuje; dist/ sa nahradi az po QA
+OLD = DIST + ".old-tmp"       # krátkodobá záloha starého dist/ počas výmeny
 VER = "6.1"
 DATE = "2026-10-19"
 
@@ -57,6 +68,18 @@ def tidy(t):
     t = re.sub(r"[ \t]+$", "", t, flags=re.M)
     t = re.sub(r"\n{3,}", "\n\n", t)
     return t.strip() + "\n"
+
+# ------------------------------------------------------------------ #
+#  0) Kontrola závislostí — skôr, než sa čokoľvek zapíše              #
+# ------------------------------------------------------------------ #
+try:
+    from PIL import Image, ImageDraw, ImageFont  # noqa: F401 (len kontrola)
+except Exception as e:
+    sys.exit("CHYBA: Pillow chýba alebo je poškodený (" + str(e) + ").\n"
+             "Inštalácia: pip install pillow  — dist/ ostáva bez zmeny.")
+if not shutil.which("node"):
+    sys.exit("CHYBA: Node.js (príkaz node) nie je dostupný — potrebný na "
+             "kontrolu syntaxe JS. dist/ ostáva bez zmeny.")
 
 def run(cmd):
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -325,38 +348,58 @@ ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 # ------------------------------------------------------------------ #
 #  8) Zápis dist/ a QA                                                 #
 # ------------------------------------------------------------------ #
+def write_and_check(out):
+    os.makedirs(os.path.join(out, "icons"))
+    W = {
+        "index.html": index,
+        "app.css": tidy(css_web),
+        "app.js": tidy(js_web),
+        "sw.js": SW,
+        "manifest.webmanifest": MANIFEST,
+        "podmienky.html": PODMIENKY,
+        "_headers": HEADERS,
+        "robots.txt": ROBOTS,
+        "pravopisny-trener-offline.html": off,
+        os.path.join("icons", "icon.svg"): ICON_SVG,
+    }
+    for name, content in W.items():
+        open(os.path.join(out, name), "w", encoding="utf-8").write(content)
+    build_icons(os.path.join(out, "icons"))
+
+    # QA
+    run(["node", "--check", os.path.join(out, "app.js")])
+    run(["node", "--check", os.path.join(out, "sw.js")])
+    for f in ("index.html", "podmienky.html", "pravopisny-trener-offline.html"):
+        t = open(os.path.join(out, f), encoding="utf-8").read()
+        assert 'style="' not in t, f + ": obsahuje inline style (porušuje CSP)"
+    web_html = open(os.path.join(out, "index.html"), encoding="utf-8").read()
+    assert "<!--" not in web_html, "index.html obsahuje komentáre"
+    assert "manifest.webmanifest" in web_html and "app.css" in web_html
+    offline_html = open(os.path.join(out, "pravopisny-trener-offline.html"), encoding="utf-8").read()
+    assert "manifest" not in offline_html and "sw.js" not in offline_html, "offline verzia nesmie obsahovať PWA prvky"
+    assert len(re.findall(r"\{id:'", offline_html)) == 245
+
+# Zvyšky po prerušenom behu: ak výmena skončila v polovici, obnoviť dist/.
+if os.path.isdir(OLD):
+    if os.path.isdir(DIST):
+        shutil.rmtree(OLD)
+    else:
+        os.rename(OLD, DIST)
+if os.path.isdir(STAGE):
+    shutil.rmtree(STAGE)
+
+try:
+    write_and_check(STAGE)
+except BaseException:
+    shutil.rmtree(STAGE, ignore_errors=True)
+    print("BUILD ZLYHAL — dist/ ostáva bez zmeny (predchádzajúca verzia).")
+    raise
+
+# Všetko prešlo: vymeniť dist/ za novú verziu.
 if os.path.isdir(DIST):
-    shutil.rmtree(DIST)
-os.makedirs(os.path.join(DIST, "icons"))
-
-W = {
-    "index.html": index,
-    "app.css": tidy(css_web),
-    "app.js": tidy(js_web),
-    "sw.js": SW,
-    "manifest.webmanifest": MANIFEST,
-    "podmienky.html": PODMIENKY,
-    "_headers": HEADERS,
-    "robots.txt": ROBOTS,
-    "pravopisny-trener-offline.html": off,
-    os.path.join("icons", "icon.svg"): ICON_SVG,
-}
-for name, content in W.items():
-    open(os.path.join(DIST, name), "w", encoding="utf-8").write(content)
-build_icons(os.path.join(DIST, "icons"))
-
-# QA
-run(["node", "--check", os.path.join(DIST, "app.js")])
-run(["node", "--check", os.path.join(DIST, "sw.js")])
-for f in ("index.html", "podmienky.html", "pravopisny-trener-offline.html"):
-    t = open(os.path.join(DIST, f), encoding="utf-8").read()
-    assert 'style="' not in t, f + ": obsahuje inline style (porušuje CSP)"
-web_html = open(os.path.join(DIST, "index.html"), encoding="utf-8").read()
-assert "<!--" not in web_html, "index.html obsahuje komentáre"
-assert "manifest.webmanifest" in web_html and "app.css" in web_html
-offline_html = open(os.path.join(DIST, "pravopisny-trener-offline.html"), encoding="utf-8").read()
-assert "manifest" not in offline_html and "sw.js" not in offline_html, "offline verzia nesmie obsahovať PWA prvky"
-assert len(re.findall(r"\{id:'", offline_html)) == 245
+    os.rename(DIST, OLD)
+os.rename(STAGE, DIST)
+shutil.rmtree(OLD, ignore_errors=True)
 
 print("BUILD OK — dist/ pripravené")
 for name in sorted(os.listdir(DIST)):
@@ -370,4 +413,4 @@ print("  1) " + PH_EMAIL + "   (index.html, podmienky.html)")
 print("  2) " + PH_GITHUB + "   (podmienky.html, offline verzia)")
 print("  3) " + PH_DOMAIN + "   (podľa potreby v README)")
 
-# v1.1 — koniec súboru
+# v1.2 — koniec súboru
