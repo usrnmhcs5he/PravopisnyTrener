@@ -155,6 +155,11 @@ kvôli prísnemu CSP), `sw.js` + `manifest.webmanifest` (PWA/offline),
 `_headers` (bezpečnostné hlavičky), `robots.txt`, `icons/` a
 `pravopisny-trener-offline.html` (jednosúborová verzia na stiahnutie).
 
+**Automatická kontrola:** pri každom pushi GitHub spustí
+`.github/workflows/build.yml` — `python3 build_web.py` musí skončiť „BUILD OK"
+a commitnutý `dist/` musí zodpovedať masteru (PNG ikony sa neporovnávajú, ich
+bajty závisia od verzie Pillow). Kontrola nič nenasadzuje ani nemení.
+
 **Pred nasadením nahradiť placeholdery** (build ich vypíše):
 `KONTAKT@VASA-DOMENA.SK`, `https://github.com/VAS-UCET/pravopisny-trener`.
 
