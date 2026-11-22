@@ -1,0 +1,50 @@
+# =====================================================================
+#  build.yml — Pravopisný tréner: kontrola buildu pri každom pushi
+# =====================================================================
+#  VERSION HISTORY
+#  v1.0 (2026-11-22)
+#    - Prvé vydanie. Spustí `python3 build_web.py` (musí skončiť
+#      „BUILD OK") a overí, že commitnutý priečinok dist/ zodpovedá
+#      masteru (okrem PNG ikon, ktorých bajty závisia od verzie Pillow).
+#    - Pillow sa inštaluje len na dočasný stroj GitHubu, do venv.
+# =====================================================================
+name: Build
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build_web.py a kontrola dist/
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Pillow do dočasného venv
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet Pillow
+          "$RUNNER_TEMP/venv/bin/python" -c "import PIL, sys; print('Python', sys.version.split()[0], '| Pillow', PIL.__version__)"
+          node --version
+
+      - name: Build
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" build_web.py | tee "$RUNNER_TEMP/build.log"
+          grep -q "BUILD OK" "$RUNNER_TEMP/build.log"
+
+      - name: dist/ zodpovedá masteru
+        run: |
+          if [ -n "$(git status --porcelain -- dist ':(exclude)dist/icons/*.png')" ]; then
+            echo "dist/ nie je aktuálny — spusti python3 build_web.py a commitni výsledok:"
+            git status --short -- dist ':(exclude)dist/icons/*.png'
+            git diff --stat -- dist ':(exclude)dist/icons/*.png'
+            exit 1
+          fi
+          echo "dist/ je aktuálny."
+
+# v1.0 — koniec súboru
