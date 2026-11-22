@@ -2,6 +2,10 @@
 #  build.yml — Pravopisný tréner: kontrola buildu pri každom pushi
 # =====================================================================
 #  VERSION HISTORY
+#  v1.1 (2026-11-22)
+#    - actions/checkout v4 nahradený v7.0.1 (v4 cieli na zastarané
+#      Node.js 20 a pri každom behu vypisoval varovanie). Kontroly
+#      bez zmeny.
 #  v1.0 (2026-11-22)
 #    - Prvé vydanie. Spustí `python3 build_web.py` (musí skončiť
 #      „BUILD OK") a overí, že commitnutý priečinok dist/ zodpovedá
@@ -23,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Pillow do dočasného venv
         run: |
@@ -47,4 +51,4 @@ jobs:
           fi
           echo "dist/ je aktuálny."
 
-# v1.0 — koniec súboru
+# v1.1 — koniec súboru
