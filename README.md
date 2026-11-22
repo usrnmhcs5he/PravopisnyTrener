@@ -1,5 +1,7 @@
 # Pravopisný tréner — mäkké i / tvrdé y
 
+[![Build](https://github.com/usrnmhcs5he/PravopisnyTrener/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/usrnmhcs5he/PravopisnyTrener/actions/workflows/build.yml)
+
 Interaktívna hra na precvičovanie slovenského pravopisu i/í a y/ý pre deti.
 Jediný súbor `pravopisny-trener.html` — žiadna inštalácia, žiadne závislosti,
 žiadne sieťové volania. Beží offline priamo z disku.
@@ -159,6 +161,7 @@ kvôli prísnemu CSP), `sw.js` + `manifest.webmanifest` (PWA/offline),
 `.github/workflows/build.yml` — `python3 build_web.py` musí skončiť „BUILD OK"
 a commitnutý `dist/` musí zodpovedať masteru (PNG ikony sa neporovnávajú, ich
 bajty závisia od verzie Pillow). Kontrola nič nenasadzuje ani nemení.
+Odznak „Build" na začiatku README ukazuje výsledok posledného behu na `main`.
 
 **Pred nasadením nahradiť placeholdery** (build ich vypíše):
 `KONTAKT@VASA-DOMENA.SK`, `https://github.com/VAS-UCET/pravopisny-trener`.

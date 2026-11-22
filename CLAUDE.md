@@ -23,7 +23,7 @@ README) sú po slovensky.
 | `dist/` | Vygenerované nasadenie pre Cloudflare Pages + offline verzia. **Needitovať ručne** — vždy pregenerovať buildom. Je commitnuté zámerne, aby Pages nepotreboval build krok. |
 | `README.md` | Hlavné README projektu (v6.1). |
 | `build_web_README.md` | Párové README k build skriptu (v1.1). |
-| `.github/workflows/build.yml` | Kontrola na GitHube pri každom pushi (v1.0): spustí build a overí, že `dist/` zodpovedá masteru. |
+| `.github/workflows/build.yml` | Kontrola na GitHube pri každom pushi (v1.1): spustí build a overí, že `dist/` zodpovedá masteru. |
 | `.claude/settings.json` | Nastavenia Claude Code: vypnutá atribúcia Claude, git identita vlastníka. |
 
 Obsah hry: 245 položiek v 14 kategóriách, 3 režimy (Doplňovačka, Padajúce slová,
