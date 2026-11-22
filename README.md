@@ -255,4 +255,14 @@ Slovník a pravidlá boli pri tvorbe overené proti verejným školským zdrojom
 - Nevykonáva žiadne sieťové volania; všetko (zvuky, grafika, dáta) je vnorené.
 - Jediné zapisované dáta sú lokálne štatistiky hráča v prehliadači.
 
+## Licencia
+
+- **Kód** (HTML/CSS/JavaScript hry, `build_web.py`): licencia MIT, pozri
+  [`LICENSE`](LICENSE).
+- **Obsah** (zoznam slov a viet, vysvetlenia pravidiel, pamäťovky a ostatné
+  texty hry): Creative Commons BY-NC-SA 4.0, pozri
+  [`LICENSE-CONTENT.md`](LICENSE-CONTENT.md). Obsah možno bezplatne používať,
+  upravovať a šíriť na nekomerčné účely (napr. v škole), s uvedením zdroja
+  a pod rovnakou licenciou.
+
 <!-- v6.1 (2026-10-19) — koniec súboru -->
